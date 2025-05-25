@@ -582,15 +582,14 @@ body {
 }
 
 .modal-content {
-    background-color: var(--bg-primary);
-    border-radius: var(--radius-lg);
-    width: 100%;
     max-width: 500px;
-    max-height: 90vh;
+    width: 98vw;
+    max-height: 96vh;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    animation: slideUp var(--transition-base);
+    border-radius: 16px;
+    box-shadow: 0 4px 32px #0005;
 }
 
 .modal-content.workout-modal {
@@ -635,7 +634,8 @@ body {
 .modal-body {
     padding: var(--spacing-lg);
     overflow-y: auto;
-    flex: 1;
+    flex: 1 1 auto;
+    min-height: 60px;
 }
 
 .modal-footer {
@@ -643,6 +643,10 @@ body {
     gap: var(--spacing-md);
     padding: var(--spacing-lg);
     border-top: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    z-index: 10;
+    position: sticky;
+    bottom: 0;
 }
 
 .modal-footer .btn {
@@ -1169,10 +1173,20 @@ body {
     }
     
     .modal-content {
+        max-width: 98vw;
         margin: var(--spacing-sm);
-        max-height: calc(100vh - var(--spacing-lg));
+        padding: 0;
     }
-    
+@media (max-width: 600px) {
+    .modal-content {
+        max-width: 98vw;
+        margin: var(--spacing-sm);
+        padding: 0;
+    }
+    .modal-body, .modal-footer {
+        padding: var(--spacing-md);
+    }
+}
     .rest-timer {
         left: var(--spacing-md);
         right: var(--spacing-md);
