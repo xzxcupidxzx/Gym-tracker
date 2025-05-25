@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gym Tracker - Quản lý tập luyện thông minh</title>
+    <meta name="description" content="Ứng dụng theo dõi và quản lý tập luyện gym với AI">
+    <meta name="theme-color" content="#4CAF50">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Gym Tracker">
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png">
+    <link rel="stylesheet" href="css/main.css">
+
+    <!-- Chart.js Preload (cho analytics) -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/chart.js" as="script">
+	
+</head>
+<body>
+    <!-- Install Banner -->
+    <div id="install-banner" class="install-banner" style="display:none;">
+        <div class="install-content">
+            <span>📱 Cài đặt Gym Tracker để dùng offline</span>
+            <button class="btn btn-primary btn-sm" id="install-btn">Cài đặt</button>
+            <button class="btn-close" onclick="hideInstallBanner()">×</button>
+        </div>
+    </div>
+
+    <!-- Offline Indicator -->
+    <div id="offline-indicator" class="offline-indicator" style="display:none;">
+        <span>📡 Đang offline</span>
+    </div>
+
+    <!-- Header -->
+    <header class="app-header">
+        <div class="container">
+            <div class="header-content">
+                <h1 class="app-title">💪 Gym Tracker</h1>
+                <div class="header-actions">
+                    <button class="icon-btn" onclick="app.openBackendSettings()" title="Sync Settings">
+                        <span id="sync-status">☁️</span>
+                    </button>
+                    <button class="icon-btn" onclick="app.openSettings()" title="Settings">⚙️</button>
+                    <button class="menu-toggle" id="menu-toggle" aria-label="Toggle menu">
+                        <span></span><span></span><span></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="app-nav" id="app-nav">
+        <div class="container">
+            <div class="nav-links">
+                <a href="#home" class="nav-link active" data-page="home">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-text">Trang chủ</span>
+                </a>
+                <a href="#templates" class="nav-link" data-page="templates">
+                    <span class="nav-icon">📋</span>
+                    <span class="nav-text">Templates</span>
+                </a>
+                <a href="#exercises" class="nav-link" data-page="exercises">
+                    <span class="nav-icon">🏋️</span>
+                    <span class="nav-text">Bài tập</span>
+                </a>
+                <a href="#analytics" class="nav-link" data-page="analytics">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">Analytics</span>
+                </a>
+                <a href="#history" class="nav-link" data-page="history">
+                    <span class="nav-icon">📅</span>
+                    <span class="nav-text">Lịch sử</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="app-main">
+        <div class="container">
+            <!-- Home Page -->
+            <section id="home-page" class="page active">
+                <div id="ai-suggestion-banner" class="ai-suggestion-banner" style="display:none;">
+                    <div class="ai-content">
+                        <span class="ai-icon">🤖</span>
+                        <div class="ai-text">
+                            <strong>AI Suggestion</strong>
+                            <p id="ai-suggestion-text"></p>
+                        </div>
+                        <button class="btn btn-primary btn-sm" onclick="app.acceptAISuggestion()">Sử dụng</button>
+                    </div>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="stat-icon">🏋️</div><div class="stat-content"><div class="stat-value" id="total-workouts">0</div><div class="stat-label">Buổi tập</div></div></div>
+                    <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-content"><div class="stat-value" id="total-templates">0</div><div class="stat-label">Templates</div></div></div>
+                    <div class="stat-card"><div class="stat-icon">🔥</div><div class="stat-content"><div class="stat-value" id="this-week">0</div><div class="stat-label">Tuần này</div></div></div>
+                    <div class="stat-card"><div class="stat-icon">💪</div><div class="stat-content"><div class="stat-value" id="total-volume">0</div><div class="stat-label">Tổng KG</div></div></div>
+                </div>
+                <div class="quick-actions">
+                    <button class="quick-action-btn primary" onclick="app.startQuickWorkout()">
+                        <span class="btn-icon">🚀</span>
+                        <span class="btn-text">Bắt đầu tập</span>
+                    </button>
+                    <button class="quick-action-btn" onclick="app.getAIWorkoutSuggestion()">
+                        <span class="btn-icon">🤖</span>
+                        <span class="btn-text">AI Suggest</span>
+                    </button>
+                    <button class="quick-action-btn" onclick="app.createTemplate()">
+                        <span class="btn-icon">➕</span>
+                        <span class="btn-text">Tạo template</span>
+                    </button>
+                </div>
+                <div class="section">
+                    <div class="section-header">
+                        <h2 class="section-title">Templates gần đây</h2>
+                        <a href="#templates" class="section-link">Xem tất cả →</a>
+                    </div>
+                    <div class="templates-grid" id="recent-templates"></div>
+                </div>
+                <div class="section">
+                    <div class="section-header">
+                        <h2 class="section-title">🏆 Personal Records</h2>
+                        <a href="#analytics" class="section-link">Xem analytics →</a>
+                    </div>
+                    <div id="recent-prs" class="pr-list"></div>
+                </div>
+            </section>
+            <!-- Templates Page -->
+            <section id="templates-page" class="page">
+                <div class="page-header">
+                    <h2 class="page-title">Templates</h2>
+                    <button class="btn btn-primary" onclick="app.createTemplate()"><span class="btn-icon">➕</span>Tạo template</button>
+                </div>
+                <div class="filters">
+                    <input type="search" class="search-input" id="template-search" placeholder="Tìm kiếm templates...">
+                    <select class="filter-select" id="template-filter">
+                        <option value="">Tất cả</option>
+                        <option value="beginner">Người mới</option>
+                        <option value="intermediate">Trung cấp</option>
+                        <option value="advanced">Nâng cao</option>
+                    </select>
+                </div>
+                <div class="templates-grid" id="all-templates"></div>
+            </section>
+            <!-- Exercises Page -->
+			<section id="exercises-page" class="page">
+				<div class="page-header">
+					<h2 class="page-title">Bài tập</h2>
+					<button class="btn btn-primary" onclick="app.openAddExerciseModal()">
+						<span class="btn-icon">➕</span>Thêm bài tập
+					</button>
+					<button class="btn btn-secondary" onclick="document.getElementById('import-exercise-file').click()">
+						<span class="btn-icon">📥</span>Import
+					</button>
+					<button class="btn btn-secondary" onclick="app.exportExercises()">
+						<span class="btn-icon">📤</span>Export
+					</button>
+					<input type="file" id="import-exercise-file" accept=".json" style="display:none;" onchange="app.importExercises(event)">
+				</div>
+				<div class="exercises-grid" id="all-exercises"></div>
+			</section>
+
+                </div>
+                <div class="exercises-grid" id="all-exercises"></div>
+            </section>
+            <!-- Analytics Page -->
+			<section id="analytics-page" class="page">
+				<div class="page-header">
+					<h2 class="page-title">Analytics & Insights</h2>
+					<button class="btn btn-secondary" onclick="app.generateReport()">
+						<span class="btn-icon">📄</span>Generate Report
+					</button>
+				</div>
+				<div class="time-range-selector">
+					<button class="time-btn active" data-range="week">Week</button>
+					<button class="time-btn" data-range="month">Month</button>
+					<button class="time-btn" data-range="quarter">Quarter</button>
+					<button class="time-btn" data-range="year">Year</button>
+				</div>
+				<div class="analytics-grid">
+					<div class="chart-container">
+						<h3>Volume Progression</h3>
+						<canvas id="volume-chart"></canvas>
+					</div>
+					<div class="chart-container">
+						<h3>Muscle Distribution</h3>
+						<canvas id="muscle-distribution-chart"></canvas>
+					</div>
+					<div class="chart-container">
+						<h3>Workout Frequency</h3>
+						<canvas id="heatmap-chart"></canvas>
+					</div>
+					<div class="chart-container">
+						<h3>Personal Records</h3>
+						<canvas id="pr-chart"></canvas>
+					</div>
+					<div class="chart-container">
+						<h3>Strength Standards</h3>
+						<canvas id="strength-chart"></canvas>
+					</div>
+					<div class="chart-container">
+						<h3>Progress Prediction</h3>
+						<canvas id="prediction-chart"></canvas>
+					</div>
+                <div class="insights-section">
+                    <h3>🤖 AI Insights</h3>
+                    <div id="ai-insights" class="insights-grid"></div>
+                </div>
+            </section>
+            <!-- History Page -->
+            <section id="history-page" class="page">
+                <div class="page-header">
+                    <h2 class="page-title">Lịch sử tập luyện</h2>
+                    <div class="header-actions">
+                        <input type="file" id="import-file" accept=".json" style="display:none;" onchange="app.handleImportFile(event)">
+                        <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()"><span class="btn-icon">📥</span>Import</button>
+                        <button class="btn btn-secondary" onclick="app.exportData()"><span class="btn-icon">📤</span>Export</button>
+                    </div>
+                </div>
+                <div class="view-toggle">
+                    <button class="view-btn active" data-view="list">List</button>
+                    <button class="view-btn" data-view="calendar">Calendar</button>
+                </div>
+                <div class="history-list" id="workout-history"></div>
+                <div class="calendar-view" id="workout-calendar" style="display:none;"></div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Workout Modal -->
+    <div class="modal" id="workout-modal">
+        <div class="modal-content workout-modal">
+            <div class="modal-header">
+                <h3 id="workout-title">Workout</h3>
+                <div id="workout-timer-box">
+                    <span class="timer-icon">⏱️</span>
+                    <span class="timer-text" id="workout-timer">00:00</span>
+                </div>
+                <button class="modal-close" onclick="app.closeWorkout()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="workout-exercises" id="workout-exercises"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="app.pauseWorkout()">Tạm dừng</button>
+                <button class="btn btn-primary" onclick="app.finishWorkout()">Hoàn thành</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template Form Modal -->
+    <div class="modal" id="template-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="template-form-title">Tạo Template</h3>
+                <button class="modal-close" onclick="app.closeTemplateForm()">✕</button>
+            </div>
+            <form id="template-form" class="modal-body">
+                <div class="form-group">
+                    <label for="template-name">Tên template</label>
+                    <input type="text" id="template-name" class="form-input" placeholder="VD: Push Day, Leg Day..." required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="template-level">Độ khó</label>
+                        <select id="template-level" class="form-select">
+                            <option value="">Chọn độ khó</option>
+                            <option value="beginner">🌱 Người mới</option>
+                            <option value="intermediate">⚡ Trung cấp</option>
+                            <option value="advanced">🔥 Nâng cao</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="template-duration">Thời gian (phút)</label>
+                        <input type="number" id="template-duration" class="form-input" placeholder="60" min="15" max="180">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Bài tập</label>
+                    <div class="selected-exercises" id="selected-exercises"></div>
+                    <button type="button" class="btn btn-secondary btn-block" onclick="app.selectExercises()">➕ Thêm bài tập</button>
+                </div>
+            </form>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="app.closeTemplateForm()">Hủy</button>
+                <button class="btn btn-primary" onclick="app.saveTemplate()">Lưu template</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template Preview Modal -->
+    <div class="modal" id="template-preview-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="template-preview-title">Template</h3>
+                <button class="modal-close" onclick="app.closeTemplatePreview()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div id="template-preview-list"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="app.editTemplateFromPreview()">Edit</button>
+                <button class="btn btn-primary" onclick="app.startWorkoutFromPreview()">Start Workout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exercise Selection Modal -->
+    <div class="modal" id="exercise-select-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Chọn bài tập</h3>
+                <button class="modal-close" onclick="app.closeExerciseSelect()">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="search" class="search-input" id="exercise-select-search" placeholder="Tìm kiếm bài tập...">
+                <div class="exercise-select-list" id="exercise-select-list"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="app.closeExerciseSelect()">Hủy</button>
+                <button class="btn btn-primary" onclick="app.confirmExerciseSelection()">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exercise History Modal -->
+    <div class="modal" id="exercise-history-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="exercise-history-title">Lịch sử bài tập</h3>
+                <button class="modal-close" onclick="app.closeExerciseHistory()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div id="exercise-history-chart" class="chart-container"><canvas id="exercise-progress-chart"></canvas></div>
+                <div id="exercise-history-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settings-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Cài đặt</h3>
+                <button class="modal-close" onclick="app.closeSettings()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-section">
+                    <h4>Notifications</h4>
+                    <label class="toggle-setting">
+                        <input type="checkbox" id="enable-notifications" onchange="app.toggleNotifications()">
+                        <span>Thông báo rest timer</span>
+                    </label>
+                    <label class="toggle-setting">
+                        <input type="checkbox" id="enable-pr-notifications" onchange="app.togglePRNotifications()">
+                        <span>Thông báo Personal Records</span>
+                    </label>
+                </div>
+                <div class="settings-section">
+                    <h4>Units</h4>
+                    <label class="radio-setting">
+                        <input type="radio" name="weight-unit" value="kg" checked onchange="app.setWeightUnit('kg')">
+                        <span>Kilograms (kg)</span>
+                    </label>
+                    <label class="radio-setting">
+                        <input type="radio" name="weight-unit" value="lb" onchange="app.setWeightUnit('lb')">
+                        <span>Pounds (lb)</span>
+                    </label>
+                </div>
+                <div class="settings-section">
+                    <h4>Theme</h4>
+                    <label class="radio-setting">
+                        <input type="radio" name="theme" value="auto" checked onchange="app.setTheme('auto')">
+                        <span>Auto (System)</span>
+                    </label>
+                    <label class="radio-setting">
+                        <input type="radio" name="theme" value="light" onchange="app.setTheme('light')">
+                        <span>Light</span>
+                    </label>
+                    <label class="radio-setting">
+                        <input type="radio" name="theme" value="dark" onchange="app.setTheme('dark')">
+                        <span>Dark</span>
+                    </label>
+                </div>
+                <div class="settings-section">
+                    <h4>AI Features</h4>
+                    <label class="toggle-setting">
+                        <input type="checkbox" id="enable-ai-suggestions" checked onchange="app.toggleAISuggestions()">
+                        <span>AI Workout Suggestions</span>
+                    </label>
+                    <label class="toggle-setting">
+                        <input type="checkbox" id="enable-form-checks" checked onchange="app.toggleFormChecks()">
+                        <span>AI Form Checks</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Backend Settings Modal -->
+    <div class="modal" id="backend-settings-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Sync Settings</h3>
+                <button class="modal-close" onclick="app.closeBackendSettings()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-section">
+                    <h4>Storage Provider</h4>
+                    <label class="radio-setting">
+                        <input type="radio" name="provider" value="local" checked onchange="app.toggleProviderConfig('local')">
+                        <span>Local Storage Only</span>
+                    </label>
+                    <label class="radio-setting">
+                        <input type="radio" name="provider" value="nas" onchange="app.toggleProviderConfig('nas')">
+                        <span>Synology NAS</span>
+                    </label>
+                    <label class="radio-setting">
+                        <input type="radio" name="provider" value="onedrive" onchange="app.toggleProviderConfig('onedrive')">
+                        <span>OneDrive</span>
+                    </label>
+                </div>
+                <div id="nas-config" class="provider-config" style="display:none;">
+                    <h4>NAS Configuration</h4>
+                    <div class="form-group">
+                        <label>NAS URL</label>
+                        <input type="text" class="form-input" placeholder="http://192.168.1.100:5000" id="nas-url">
+                    </div>
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" class="form-input" placeholder="Username" id="nas-username">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" class="form-input" placeholder="Password" id="nas-password">
+                    </div>
+                </div>
+                <div id="onedrive-config" class="provider-config" style="display:none;">
+                    <h4>OneDrive Configuration</h4>
+                    <div class="onedrive-status" id="onedrive-status">
+                        <p>Not connected</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="app.authenticateOneDrive()">
+                        Connect OneDrive
+                    </button>
+                </div>
+                <div class="sync-status">
+                    <h4>Sync Status</h4>
+                    <div id="sync-status-info">
+                        <p>Last sync: <span id="last-sync">Never</span></p>
+                        <p>Status: <span id="sync-status-text">Not configured</span></p>
+                    </div>
+                    <button class="btn btn-secondary" onclick="app.manualSync()">Sync Now</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="app.closeBackendSettings()">Cancel</button>
+                <button class="btn btn-primary" onclick="app.saveBackendSettings()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rest Timer -->
+    <div class="rest-timer" id="rest-timer">
+        <div class="rest-timer-content">
+            <div class="rest-timer-label">Thời gian nghỉ</div>
+            <div class="rest-timer-time" id="rest-time">02:00</div>
+            <div class="rest-timer-actions">
+                <button class="rest-timer-btn" onclick="app.skipRest()">Bỏ qua</button>
+                <button class="rest-timer-btn" onclick="app.addRestTime(30)">+30s</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PR Notification -->
+    <div class="pr-notification" id="pr-notification" style="display:none;">
+        <div class="pr-content">
+            <span class="pr-icon">🏆</span>
+            <span class="pr-text">Personal Record!</span>
+        </div>
+    </div>
+	
+	<div class="modal" id="workout-detail-modal">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h3>Chi tiết Workout</h3>
+				<button class="modal-close" onclick="document.getElementById('workout-detail-modal').classList.remove('active')">✕</button>
+			</div>
+			<div class="modal-body" id="workout-detail-content"></div>
+		</div>
+	</div>
+	<div class="modal" id="exercise-picker-modal">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h3>Chọn bài tập thay thế</h3>
+				<button class="modal-close" onclick="app.closeExercisePicker()">✕</button>
+			</div>
+			<div class="modal-body" id="exercise-picker-list"></div>
+			<div class="modal-footer">
+				<button class="btn btn-secondary" onclick="app.closeExercisePicker()">Hủy</button>
+				<button class="btn btn-primary" id="confirm-ex-picker-btn">Xác nhận</button>
+			</div>
+		</div>
+	</div>
+	<!-- Exercise Edit Modal -->
+	<div class="modal" id="exercise-edit-modal">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h3 id="exercise-edit-title">Chỉnh sửa bài tập</h3>
+				<button class="modal-close" onclick="app.closeEditExerciseModal()">✕</button>
+			</div>
+			<div class="modal-body">
+				<form id="exercise-edit-form">
+					<div class="form-group">
+						<label for="exercise-edit-name">Tên bài tập</label>
+						<input type="text" id="exercise-edit-name" class="form-input" required>
+					</div>
+					<div class="form-group">
+						<label for="exercise-edit-muscle">Nhóm cơ</label>
+						<select id="exercise-edit-muscle" class="form-select">
+							<option value="chest">Ngực</option>
+							<option value="back">Lưng</option>
+							<option value="legs">Chân</option>
+							<option value="shoulders">Vai</option>
+							<option value="arms">Tay</option>
+							<option value="core">Bụng</option>
+							<option value="fullbody">Toàn thân</option>
+						</select>
+					</div>
+					<div class="form-group">
+						<label for="exercise-edit-type">Loại bài tập</label>
+						<select id="exercise-edit-type" class="form-select">
+							<option value="strength">Strength</option>
+							<option value="bodyweight">Bodyweight</option>
+							<option value="cardio">Cardio</option>
+							<option value="hiit">HIIT</option>
+							<option value="mobility">Mobility</option>
+							<option value="stretching">Stretching</option>
+							<option value="plyometrics">Plyometrics</option>
+						</select>
+					</div>
+					<div class="form-group">
+						<label for="exercise-edit-equipment">Thiết bị</label>
+						<input type="text" id="exercise-edit-equipment" class="form-input" placeholder="barbell, dumbbell, machine...">
+					</div>
+					<div class="form-group">
+						<label for="exercise-edit-unit">Đơn vị</label>
+						<select id="exercise-edit-unit" class="form-select">
+							<option value="kg">Kilograms (kg)</option>
+							<option value="lb">Pounds (lb)</option>
+							<option value="reps">Reps</option>
+							<option value="minute">Minute</option>
+							<option value="second">Second</option>
+						</select>
+					</div>
+				</form>
+			</div>
+			<div class="modal-footer">
+				<button class="btn btn-secondary" onclick="app.closeEditExerciseModal()">Hủy</button>
+				<button class="btn btn-primary" onclick="app.saveEditExercise()">Lưu thay đổi</button>
+			</div>
+		</div>
+	</div>
+	
+	<!-- Exercise Add Modal -->
+	<div class="modal" id="exercise-add-modal">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h3>Thêm bài tập mới</h3>
+				<button class="modal-close" onclick="app.closeAddExerciseModal()">✕</button>
+			</div>
+			<div class="modal-body">
+				<form id="exercise-add-form" onsubmit="event.preventDefault(); app.saveAddExercise();">
+					<div class="form-group">
+						<label for="exercise-add-name">Tên bài tập</label>
+						<input type="text" id="exercise-add-name" class="form-input" required>
+					</div>
+					<div class="form-group">
+						<label>Nhóm cơ</label>
+						<div id="exercise-add-muscle-group" class="chip-group" style="margin-top:8px;">
+							<button type="button" class="chip-btn" data-value="arms">Tay</button>
+							<button type="button" class="chip-btn" data-value="back">Lưng</button>
+							<button type="button" class="chip-btn" data-value="cardio">Cardio</button>
+							<button type="button" class="chip-btn" data-value="chest">Ngực</button>
+							<button type="button" class="chip-btn" data-value="core">Bụng</button>
+							<button type="button" class="chip-btn" data-value="fullbody">Toàn thân</button>
+							<button type="button" class="chip-btn" data-value="legs">Chân</button>
+							<button type="button" class="chip-btn" data-value="olympic">Olympic</button>
+							<button type="button" class="chip-btn" data-value="shoulders">Vai</button>
+							<button type="button" class="chip-btn" data-value="other">Khác</button>
+						</div>
+						<input type="hidden" id="exercise-add-muscle">
+					</div>
+					<div class="form-group">
+						<label for="exercise-add-type">Loại bài tập</label>
+						<select id="exercise-add-type" class="form-select">
+							<option value="strength">Strength</option>
+							<option value="bodyweight">Bodyweight</option>
+							<option value="cardio">Cardio</option>
+							<option value="hiit">HIIT</option>
+							<option value="mobility">Mobility</option>
+							<option value="stretching">Stretching</option>
+							<option value="plyometrics">Plyometrics</option>
+						</select>
+					</div>
+					<div class="form-group">
+						<label for="exercise-add-equipment">Thiết bị</label>
+						<select id="exercise-add-equipment" class="form-select">
+							<option value="bodyweight">Bodyweight</option>
+							<option value="barbell">Barbell</option>
+							<option value="dumbbell">Dumbbell</option>
+							<option value="machine">Machine</option>
+							<option value="cable">Cable</option>
+							<option value="weightedbodyweight">Weighted Bodyweight</option>
+							<option value="assistedbodyweight">Assisted bodyweight</option>
+							<option value="reponly">Reponly</option>
+							<option value="cardio">Cardio</option>
+							<option value="duration">Duration</option>
+
+						</select>
+					</div>
+					<div class="form-group">
+						<label for="exercise-add-unit">Đơn vị</label>
+						<select id="exercise-add-unit" class="form-select">
+							<option value="kg">Kilograms (kg)</option>
+							<option value="lb">Pounds (lb)</option>
+							<option value="reps">Reps</option>
+							<option value="minute">Minute</option>
+							<option value="second">Second</option>
+						</select>
+					</div>
+				</form>
+			</div>
+			<div class="modal-footer">
+				<button class="btn btn-secondary" onclick="app.closeAddExerciseModal()">Hủy</button>
+				<button class="btn btn-primary" onclick="app.saveAddExercise()">Thêm bài tập</button>
+			</div>
+		</div>
+	</div>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Context Menu for units -->
+    <div id="unit-context-menu" class="context-menu" style="display:none;position:absolute;z-index:1200;"></div>
+
+    <!-- Main JS -->
+
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<script src="js/analytics.js"></script>
+	<script src="js/backend.js"></script>
+	<script src="js/ai.js"></script>
+	<script src="js/app.js"></script>
+    <!-- Chart.js lazy load (analytics) -->
+    <!-- PWA & Service Worker, Install Banner, Online/Offline, New Version Notify -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(registration => {
+                    console.log('Service Worker registered');
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                app.showToast('New version available! Refresh to update.', 'info');
+                            }
+                        });
+                    });
+                })
+                .catch(err => console.error('Service Worker registration failed:', err));
+        }
+
+        // Install PWA
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('install-banner').style.display = 'flex';
+        });
+
+        document.getElementById('install-btn').addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    console.log('PWA installed');
+                }
+                deferredPrompt = null;
+                hideInstallBanner();
+            }
+        });
+
+        function hideInstallBanner() {
+            document.getElementById('install-banner').style.display = 'none';
+        }
+
+        // Handle offline/online status
+        window.addEventListener('online', () => {
+            document.getElementById('offline-indicator').style.display = 'none';
+            app.showToast('Back online!', 'success');
+            if (app.backend) {
+                app.backend.processSyncQueue();
+            }
+        });
+
+        window.addEventListener('offline', () => {
+            document.getElementById('offline-indicator').style.display = 'flex';
+            app.showToast('Bạn đang offline', 'warning');
+        });
+
+        // Gắn event listener toàn cục cho menu ba chấm chỉ một lần
+        document.addEventListener('click', function (e) {
+            document.querySelectorAll('.exercise-menu').forEach(menu => {
+                if (!menu.contains(e.target) && !e.target.classList.contains('btn-ex-action') && !e.target.classList.contains('menu-icon')) {
+                    menu.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gym Tracker - Quản lý tập luyện thông minh</title>
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="app-header">
+        <div class="container">
+            <div class="header-content">
+                <h1 class="app-title">💪 Gym Tracker</h1>
+				<button class="settings-btn" onclick="app.openSettings()" title="Cài đặt">
+					⚙️
+				</button>
+				<button class="menu-toggle" id="menu-toggle" aria-label="Toggle menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="app-nav" id="app-nav">
+        <div class="container">
+            <div class="nav-links">
+                <a href="#home" class="nav-link active" data-page="home">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-text">Trang chủ</span>
+                </a>
+                <a href="#templates" class="nav-link" data-page="templates">
+                    <span class="nav-icon">📋</span>
+                    <span class="nav-text">Templates</span>
+                </a>
+                <a href="#exercises" class="nav-link" data-page="exercises">
+                    <span class="nav-icon">🏋️</span>
+                    <span class="nav-text">Bài tập</span>
+                </a>
+                <a href="#history" class="nav-link" data-page="history">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">Lịch sử</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="app-main">
+        <div class="container">
+            <!-- Home Page -->
+            <section id="home-page" class="page active">
+                <!-- Quick Stats -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">🏋️</div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="total-workouts">0</div>
+                            <div class="stat-label">Buổi tập</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📋</div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="total-templates">0</div>
+                            <div class="stat-label">Templates</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🔥</div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="this-week">0</div>
+                            <div class="stat-label">Tuần này</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💪</div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="total-volume">0</div>
+                            <div class="stat-label">Tổng KG</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <button class="quick-action-btn primary" onclick="app.startQuickWorkout()">
+                        <span class="btn-icon">🚀</span>
+                        <span class="btn-text">Bắt đầu tập</span>
+                    </button>
+                    <button class="quick-action-btn" onclick="app.createTemplate()">
+                        <span class="btn-icon">➕</span>
+                        <span class="btn-text">Tạo template</span>
+                    </button>
+                </div>
+
+                <!-- Recent Templates -->
+                <div class="section">
+                    <div class="section-header">
+                        <h2 class="section-title">Templates gần đây</h2>
+                        <a href="#templates" class="section-link">Xem tất cả →</a>
+                    </div>
+                    <div class="templates-grid" id="recent-templates">
+                        <!-- Templates will be rendered here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Templates Page -->
+            <section id="templates-page" class="page">
+                <div class="page-header">
+                    <h2 class="page-title">Templates</h2>
+                    <button class="btn btn-primary" onclick="app.createTemplate()">
+                        <span class="btn-icon">➕</span>
+                        Tạo template
+                    </button>
+                </div>
+
+                <!-- Filters -->
+                <div class="filters">
+                    <input type="search" 
+                           class="search-input" 
+                           id="template-search" 
+                           placeholder="Tìm kiếm templates...">
+                    <select class="filter-select" id="template-filter">
+                        <option value="">Tất cả</option>
+                        <option value="beginner">Người mới</option>
+                        <option value="intermediate">Trung cấp</option>
+                        <option value="advanced">Nâng cao</option>
+                    </select>
+                </div>
+
+                <div class="templates-grid" id="all-templates">
+                    <!-- Templates will be rendered here -->
+                </div>
+            </section>
+
+            <!-- Exercises Page -->
+            <section id="exercises-page" class="page">
+                <div class="page-header">
+                    <h2 class="page-title">Bài tập</h2>
+                    <button class="btn btn-primary" onclick="app.createExercise()">
+                        <span class="btn-icon">➕</span>
+                        Thêm bài tập
+                    </button>
+                </div>
+
+                <!-- Filters -->
+                <div class="filters">
+                    <input type="search" 
+                           class="search-input" 
+                           id="exercise-search" 
+                           placeholder="Tìm kiếm bài tập...">
+                    <select class="filter-select" id="muscle-filter">
+                        <option value="">Tất cả nhóm cơ</option>
+                        <option value="chest">Ngực</option>
+                        <option value="back">Lưng</option>
+                        <option value="legs">Chân</option>
+                        <option value="shoulders">Vai</option>
+                        <option value="arms">Tay</option>
+                        <option value="core">Bụng</option>
+                    </select>
+                </div>
+
+                <div class="exercises-grid" id="all-exercises">
+                    <!-- Exercises will be rendered here -->
+                </div>
+            </section>
+
+            <!-- History Page -->
+            <section id="history-page" class="page">
+                <div class="page-header">
+                    <h2 class="page-title">Lịch sử tập luyện</h2>
+                    <button class="btn btn-secondary" onclick="app.exportData()">
+                        <span class="btn-icon">📤</span>
+                        Xuất dữ liệu
+                    </button>
+                </div>
+				<div class="import-export-section" style="margin-bottom: 20px;">
+					<input type="file" 
+						   id="import-file" 
+						   accept=".json" 
+						   style="display: none;"
+						   onchange="app.handleImportFile(event)">
+					<button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">
+						<span class="btn-icon">📥</span>
+						Import dữ liệu
+					</button>
+				</div>
+
+                <div class="history-list" id="workout-history">
+                    <!-- History will be rendered here -->
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Workout Modal -->
+    <div class="modal" id="workout-modal">
+        <div class="modal-content workout-modal">
+            <div class="modal-header" style="position:relative;">
+                <h3 id="workout-title">Workout</h3>
+				<div id="workout-timer-box">
+					<span class="timer-icon">⏱️</span>
+					<span class="timer-text" id="workout-timer">00:00</span>
+				</div>
+				<button class="modal-close" onclick="app.closeWorkout()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="workout-exercises" id="workout-exercises">
+                    <!-- Exercises will be rendered here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="app.pauseWorkout()">Tạm dừng</button>
+                <button class="btn btn-primary" onclick="app.finishWorkout()">Hoàn thành</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template Form Modal -->
+    <div class="modal" id="template-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="template-form-title">Tạo Template</h3>
+                <button class="modal-close" onclick="app.closeTemplateForm()">✕</button>
+            </div>
+            <form id="template-form" class="modal-body">
+                <div class="form-group">
+                    <label for="template-name">Tên template</label>
+                    <input type="text" 
+                           id="template-name" 
+                           class="form-input" 
+                           placeholder="VD: Push Day, Leg Day..." 
+                           required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="template-level">Độ khó</label>
+                        <select id="template-level" class="form-select">
+                            <option value="">Chọn độ khó</option>
+                            <option value="beginner">🌱 Người mới</option>
+                            <option value="intermediate">⚡ Trung cấp</option>
+                            <option value="advanced">🔥 Nâng cao</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="template-duration">Thời gian (phút)</label>
+                        <input type="number" 
+                               id="template-duration" 
+                               class="form-input" 
+                               placeholder="60" 
+                               min="15" 
+                               max="180">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Bài tập</label>
+                    <div class="selected-exercises" id="selected-exercises">
+                        <!-- Selected exercises will be rendered here -->
+                    </div>
+                    <button type="button" 
+                            class="btn btn-secondary btn-block" 
+                            onclick="app.selectExercises()">
+                        ➕ Thêm bài tập
+                    </button>
+                </div>
+            </form>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="app.closeTemplateForm()">Hủy</button>
+                <button class="btn btn-primary" onclick="app.saveTemplate()">Lưu template</button>
+            </div>
+        </div>
+    </div>
+	<!-- Template Preview Modal -->
+	<div class="modal" id="template-preview-modal">
+	  <div class="modal-content">
+		<div class="modal-header">
+		  <h3 id="template-preview-title">Template</h3>
+		  <button class="modal-close" onclick="app.closeTemplatePreview()">✕</button>
+		</div>
+		<div class="modal-body">
+		  <div id="template-preview-list"></div>
+		</div>
+		<div class="modal-footer">
+		  <button class="btn btn-secondary" onclick="app.editTemplateFromPreview()">Edit</button>
+		  <button class="btn btn-primary" onclick="app.startWorkoutFromPreview()">Start Workout</button>
+		</div>
+	  </div>
+	</div>
+
+    <!-- Exercise Selection Modal -->
+    <div class="modal" id="exercise-select-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Chọn bài tập</h3>
+                <button class="modal-close" onclick="app.closeExerciseSelect()">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="search" 
+                       class="search-input" 
+                       id="exercise-select-search" 
+                       placeholder="Tìm kiếm bài tập...">
+                <div class="exercise-select-list" id="exercise-select-list">
+                    <!-- Exercises will be rendered here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="app.closeExerciseSelect()">Hủy</button>
+                <button class="btn btn-primary" onclick="app.confirmExerciseSelection()">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rest Timer -->
+    <div class="rest-timer" id="rest-timer">
+        <div class="rest-timer-content">
+            <div class="rest-timer-label">Thời gian nghỉ</div>
+            <div class="rest-timer-time" id="rest-time">02:00</div>
+            <div class="rest-timer-actions">
+                <button class="rest-timer-btn" onclick="app.skipRest()">Bỏ qua</button>
+                <button class="rest-timer-btn" onclick="app.addRestTime(30)">+30s</button>
+            </div>
+        </div>
+    </div>
+	
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+	<div id="unit-context-menu" class="context-menu" style="display:none;position:absolute;z-index:1200;"></div>
+    <!-- Scripts -->
+    <script src="js/app.js"></script>
+		
+	<!-- Add Exercise History Modal -->
+	<div class="modal" id="exercise-history-modal">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h3 id="exercise-history-title">Lịch sử bài tập</h3>
+				<button class="modal-close" onclick="app.closeExerciseHistory()">✕</button>
+			</div>
+			<div class="modal-body">
+				<div id="exercise-history-content">
+					<!-- History will be rendered here -->
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Add to Workout Modal for PR notifications -->
+	<div class="pr-notification" id="pr-notification" style="display: none;">
+		<div class="pr-content">
+			<span class="pr-icon">🏆</span>
+			<span class="pr-text">Personal Record!</span>
+		</div>
+	</div>
+
+	<!-- Add Settings Modal -->
+	<div class="modal" id="settings-modal">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h3>Cài đặt</h3>
+				<button class="modal-close" onclick="app.closeSettings()">✕</button>
+			</div>
+			<div class="modal-body">
+				<div class="settings-section">
+					<h4>Notifications</h4>
+					<label class="toggle-setting">
+						<input type="checkbox" id="enable-notifications" onchange="app.toggleNotifications()">
+						<span>Thông báo rest timer</span>
+					</label>
+				</div>
+				
+				<div class="settings-section">
+					<h4>Units</h4>
+					<label class="radio-setting">
+						<input type="radio" name="weight-unit" value="kg" checked onchange="app.setWeightUnit('kg')">
+						<span>Kilograms (kg)</span>
+					</label>
+					<label class="radio-setting">
+						<input type="radio" name="weight-unit" value="lb" onchange="app.setWeightUnit('lb')">
+						<span>Pounds (lb)</span>
+					</label>
+				</div>
+				
+				<div class="settings-section">
+					<h4>Theme</h4>
+					<label class="radio-setting">
+						<input type="radio" name="theme" value="auto" checked onchange="app.setTheme('auto')">
+						<span>Auto (System)</span>
+					</label>
+					<label class="radio-setting">
+						<input type="radio" name="theme" value="light" onchange="app.setTheme('light')">
+						<span>Light</span>
+					</label>
+					<label class="radio-setting">
+						<input type="radio" name="theme" value="dark" onchange="app.setTheme('dark')">
+						<span>Dark</span>
+					</label>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
