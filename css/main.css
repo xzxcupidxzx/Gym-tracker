@@ -1982,3 +1982,51 @@ html, body {
         padding-bottom: env(safe-area-inset-bottom);
     }
 }
+@media (max-width: 480px) {
+    html {
+        font-size: 15px !important;
+    }
+    .container {
+        padding: 0 6px !important;
+    }
+    .exercise-icon, .stat-icon {
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 1rem !important;
+        margin-bottom: 6px !important;
+    }
+    .btn, .btn-primary, .btn-secondary {
+        font-size: 0.93rem !important;
+        padding: 8px 12px !important;
+    }
+    .page-title, .section-title, .app-title {
+        font-size: 1.08rem !important;
+    }
+    .exercises-grid {
+        grid-template-columns: 1fr !important;
+        gap: 13px !important;
+    }
+    .templates-grid {
+        grid-template-columns: 1fr !important;
+        gap: 13px !important;
+    }
+    .modal-content {
+        max-width: 98vw !important;
+        padding: 0 !important;
+        margin: 3vw !important;
+    }
+    .modal-header, .modal-body, .modal-footer {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }
+    .chip-group {
+        gap: 4px !important;
+    }
+    .chip-btn {
+        padding: 6px 10px !important;
+        font-size: 0.98em !important;
+    }
+    .stat-card, .template-card, .exercise-card {
+        padding: 12px !important;
+    }
+}
