@@ -582,14 +582,15 @@ body {
 }
 
 .modal-content {
+    background-color: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    width: 100%;
     max-width: 500px;
-    width: 98vw;
-    max-height: 96vh;
+    max-height: 90vh;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    border-radius: 16px;
-    box-shadow: 0 4px 32px #0005;
+    animation: slideUp var(--transition-base);
 }
 
 .modal-content.workout-modal {
@@ -634,8 +635,7 @@ body {
 .modal-body {
     padding: var(--spacing-lg);
     overflow-y: auto;
-    flex: 1 1 auto;
-    min-height: 60px;
+    flex: 1;
 }
 
 .modal-footer {
@@ -643,10 +643,6 @@ body {
     gap: var(--spacing-md);
     padding: var(--spacing-lg);
     border-top: 1px solid var(--border-color);
-    background: var(--bg-primary);
-    z-index: 10;
-    position: sticky;
-    bottom: 0;
 }
 
 .modal-footer .btn {
@@ -1173,20 +1169,10 @@ body {
     }
     
     .modal-content {
-        max-width: 98vw;
         margin: var(--spacing-sm);
-        padding: 0;
+        max-height: calc(100vh - var(--spacing-lg));
     }
-@media (max-width: 600px) {
-    .modal-content {
-        max-width: 98vw;
-        margin: var(--spacing-sm);
-        padding: 0;
-    }
-    .modal-body, .modal-footer {
-        padding: var(--spacing-md);
-    }
-}
+    
     .rest-timer {
         left: var(--spacing-md);
         right: var(--spacing-md);
@@ -1911,4 +1897,88 @@ body {
     background: #4caf50;
     color: #fff;
     font-weight: 600;
+}
+
+/* ===== Responsive cho iPhone màn dọc, tối ưu modal/nút cuối ===== */
+@media (max-width: 600px) {
+    /* GRID 1 cột cho mọi page */
+    .exercises-grid,
+    .templates-grid,
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+    .exercise-card,
+    .template-card,
+    .stat-card {
+        padding-left: 7px !important;
+        padding-right: 7px !important;
+    }
+    .modal-content {
+        max-width: 99vw !important;
+        width: 99vw !important;
+        margin: 0 auto !important;
+        min-width: unset !important;
+        border-radius: 14px !important;
+        box-shadow: 0 4px 32px #0004 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        /* sử dụng chiều cao an toàn cho iPhone */
+        max-height: calc(100dvh - 8px) !important;
+        height: auto !important;
+    }
+    .modal {
+        padding-bottom: env(safe-area-inset-bottom, 12px) !important;
+    }
+    .modal-body, .modal-footer {
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+    }
+    .selected-exercises {
+        padding: 8px !important;
+    }
+    .form-input, .form-select {
+        font-size: 1em !important;
+        min-height: 38px !important;
+    }
+    .chip-group {
+        gap: 6px !important;
+    }
+    .chip-btn {
+        min-width: 76px !important;
+        font-size: 1em !important;
+        padding: 7px 10px !important;
+        margin-bottom: 3px !important;
+    }
+    .exercise-icon, .stat-icon {
+        width: 34px !important;
+        height: 34px !important;
+        font-size: 1.4rem !important;
+        margin-bottom: 7px !important;
+    }
+    /* Modal footer luôn hiển thị trên cùng, KHÔNG bị che bởi thanh địa chỉ iOS */
+    .modal-footer {
+        position: sticky !important;
+        bottom: 0;
+        z-index: 2;
+        background: var(--bg-primary, #191919);
+        padding-bottom: calc(env(safe-area-inset-bottom, 12px) + 6px) !important;
+        box-shadow: 0 -4px 12px rgba(0,0,0,0.08);
+        border-bottom-left-radius: 14px;
+        border-bottom-right-radius: 14px;
+    }
+}
+
+/* Thêm cho Safari/iOS 15+ hỗ trợ full màn và safe-area */
+html, body {
+    min-height: 100dvh !important;
+    height: 100dvh !important;
+    box-sizing: border-box;
+    overscroll-behavior-y: contain;
+}
+
+@supports(padding-bottom: env(safe-area-inset-bottom)) {
+    body {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
 }
