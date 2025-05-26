@@ -823,6 +823,31 @@
             </div>
         </div>
     </div>
+	<div class="exercise-actions" style="display:flex;align-items:center;position:relative;">
+		<button class="btn-ex-action" 
+				onmousedown="event.stopPropagation()" 
+				onclick="event.stopPropagation(); app.toggleEditMenuTemplate(event, ${exIndex})" 
+				title="Tùy chọn">
+			<span class="menu-icon">⋯</span>
+		</button>
+		<div class="exercise-menu" 
+			 id="edit-menu-${exIndex}" 
+			 style="display:none;"
+			 onclick="event.stopPropagation()">
+			<button onclick="event.stopPropagation(); app.moveExerciseUp(${exIndex}); document.getElementById('edit-menu-${exIndex}').style.display='none';" ${exIndex === 0 ? 'disabled style="opacity:0.5;"' : ''}>⬆️ Di chuyển lên</button>
+			<button onclick="event.stopPropagation(); app.moveExerciseDown(${exIndex}); document.getElementById('edit-menu-${exIndex}').style.display='none';" ${exIndex === this.selectedExercises.length - 1 ? 'disabled style="opacity:0.5;"' : ''}>⬇️ Di chuyển xuống</button>
+			<button onclick="event.stopPropagation(); app.duplicateExercise(${exIndex}); document.getElementById('edit-menu-${exIndex}').style.display='none';">📋 Nhân đôi</button>
+			<hr style="margin:4px 0;border:none;border-top:1px solid var(--border-color);">
+			<button onclick="event.stopPropagation(); app.addNoteToTemplateExercise(${exIndex}); document.getElementById('edit-menu-${exIndex}').style.display='none';">📝 Ghi chú</button>
+			<button onclick="event.stopPropagation(); app.addStickyToTemplateExercise(${exIndex}); document.getElementById('edit-menu-${exIndex}').style.display='none';">📌 Sticky Note</button>
+			<button onclick="event.stopPropagation(); app.addWarmupSetToTemplate(${exIndex}); document.getElementById('edit-menu-${exIndex}').style.display='none';">➕ Warm-up Set</button>
+			<button onclick="event.stopPropagation(); app.updateRestTimersTemplate(${exIndex}); document.getElementById('edit-menu-${exIndex}').style.display='none';">⏱️ Update Rest</button>
+			<button onclick="event.stopPropagation(); app.replaceExerciseInTemplate(${exIndex}); document.getElementById('edit-menu-${exIndex}').style.display='none';">🔄 Thay thế</button>
+			<button onclick="event.stopPropagation(); app.createSupersetInTemplate(${exIndex}); document.getElementById('edit-menu-${exIndex}').style.display='none';">⎯⎯ Superset</button>
+			<button onclick="event.stopPropagation(); app.exercisePreferencesTemplate(${exIndex}, event); document.getElementById('edit-menu-${exIndex}').style.display='none';">⚙️ Cài đặt</button>
+			<button class="danger" onclick="event.stopPropagation(); app.removeSelectedExercise(${exIndex}); document.getElementById('edit-menu-${exIndex}').style.display='none';" style="color:#f44336;">❌ Xóa bài</button>
+		</div>
+	</div>
 
     <!-- Rest Timer -->
     <div class="rest-timer" id="rest-timer">

@@ -105,7 +105,21 @@ class GymTracker {
                 this.loadPage(page);
             });
         });
-
+		document.addEventListener('click', function (e) {
+			// Only close menus if click is NOT on menu-related elements
+			if (!e.target.closest('.exercise-menu') && 
+				!e.target.closest('.btn-ex-action') &&
+				!e.target.classList.contains('menu-icon') &&
+				!e.target.closest('.menu-icon')) {
+				
+				// Add small delay to prevent immediate closure
+				setTimeout(() => {
+					document.querySelectorAll('.exercise-menu').forEach(menu => {
+						menu.style.display = 'none';
+					});
+				}, 50);
+			}
+		});
         // Mobile menu toggle
         const menuToggle = document.getElementById('menu-toggle');
         if (menuToggle) {
@@ -1314,29 +1328,231 @@ class GymTracker {
         const s = (seconds % 60).toString().padStart(2, "0");
         return `${m}:${s}`;
     }
-
+	// ✅ ADD: Helper function to close all menus
+	closeAllMenus() {
+		document.querySelectorAll('.exercise-menu').forEach(menu => {
+			menu.style.display = 'none';
+			menu.classList.remove('positioned');
+		});
+		
+		// Remove any backdrops
+		document.querySelectorAll('.menu-backdrop').forEach(backdrop => {
+			backdrop.remove();
+		});
+	}
     // Exercise menu functions
-    toggleEditMenu(e, exIndex) {
-        e.stopPropagation();
-        document.querySelectorAll('.exercise-menu').forEach(menu => menu.style.display = 'none');
-        const menu = document.getElementById(`edit-menu-${exIndex}`);
-        if (menu) {
-            if (menu.style.display === 'block') {
-                menu.style.display = 'none';
-            } else {
-                menu.style.display = 'block';
-                setTimeout(() => {
-                    function hideMenu(ev) {
-                        if (!menu.contains(ev.target) && ev.target !== e.target) {
-                            menu.style.display = 'none';
-                            document.removeEventListener('click', hideMenu);
-                        }
-                    }
-                    document.addEventListener('click', hideMenu);
-                }, 0);
-            }
-        }
-    }
+	toggleEditMenu(e, exIndex) {
+		e.preventDefault();
+		e.stopPropagation();
+		e.stopImmediatePropagation();
+		
+		console.log(`Opening workout menu for exercise ${exIndex}`);
+		
+		// Close all other menus
+		document.querySelectorAll('.exercise-menu').forEach(menu => {
+			if (menu.id !== `edit-menu-${exIndex}`) {
+				menu.style.display = 'none';
+				menu.classList.remove('positioned');
+			}
+		});
+		
+		const menu = document.getElementById(`edit-menu-${exIndex}`);
+		const button = e.target.closest('.btn-ex-action');
+		
+		if (!menu || !button) {
+			console.error(`Workout menu not found: edit-menu-${exIndex}`);
+			return;
+		}
+		
+		const isVisible = menu.style.display === 'block';
+		
+		if (isVisible) {
+			menu.style.display = 'none';
+			menu.classList.remove('positioned');
+		} else {
+			// Same positioning logic as template menu
+			const buttonRect = button.getBoundingClientRect();
+			const menuWidth = 200;
+			
+			let menuTop = buttonRect.bottom + 5;
+			let menuLeft = buttonRect.right - menuWidth;
+			
+			// Viewport checks
+			const viewportWidth = window.innerWidth;
+			const viewportHeight = window.innerHeight;
+			const menuHeight = 300;
+			
+			if (menuLeft < 10) menuLeft = 10;
+			if (menuLeft + menuWidth > viewportWidth - 10) {
+				menuLeft = viewportWidth - menuWidth - 10;
+			}
+			if (menuTop + menuHeight > viewportHeight - 10) {
+				menuTop = buttonRect.top - menuHeight - 5;
+			}
+			
+			menu.style.display = 'block';
+			menu.style.position = 'fixed';
+			menu.style.top = `${menuTop}px`;
+			menu.style.left = `${menuLeft}px`;
+			menu.style.right = 'auto';
+			menu.style.zIndex = '999999';
+			menu.classList.add('positioned');
+			
+			// Prevent menu clicks from closing
+			menu.onclick = function(e) {
+				e.stopPropagation();
+				e.stopImmediatePropagation();
+			};
+			
+			// Outside click handler
+			setTimeout(() => {
+				function hideMenu(ev) {
+					if (!menu.contains(ev.target) && 
+						!button.contains(ev.target) &&
+						!ev.target.closest('.btn-ex-action')) {
+						menu.style.display = 'none';
+						menu.classList.remove('positioned');
+						document.removeEventListener('click', hideMenu);
+					}
+				}
+				document.addEventListener('click', hideMenu);
+			}, 300);
+		}
+	}
+	
+	toggleEditMenuTemplate(event, exIndex) {
+		event.preventDefault();
+		event.stopPropagation();
+		event.stopImmediatePropagation();
+		
+		console.log(`Opening menu for exercise ${exIndex}`);
+		
+		// Close all other menus first
+		document.querySelectorAll('.exercise-menu').forEach(menu => {
+			if (menu.id !== `edit-menu-${exIndex}`) {
+				menu.style.display = 'none';
+				menu.classList.remove('positioned');
+			}
+		});
+		
+		const menu = document.getElementById(`edit-menu-${exIndex}`);
+		const button = event.target.closest('.btn-ex-action');
+		
+		if (!menu || !button) {
+			console.error(`Menu or button not found: edit-menu-${exIndex}`);
+			return;
+		}
+		
+		const isVisible = menu.style.display === 'block';
+		
+		if (isVisible) {
+			menu.style.display = 'none';
+			menu.classList.remove('positioned');
+			console.log('Menu closed');
+		} else {
+			// ✅ Calculate absolute position for fixed positioning
+			const buttonRect = button.getBoundingClientRect();
+			const menuWidth = 200; // Menu min-width
+			
+			// Position menu below and to the right of button
+			let menuTop = buttonRect.bottom + 5; // 5px below button
+			let menuLeft = buttonRect.right - menuWidth; // Align right edge
+			
+			// ✅ Viewport boundary checks
+			const viewportWidth = window.innerWidth;
+			const viewportHeight = window.innerHeight;
+			const menuHeight = 300; // Estimated menu height
+			
+			// Adjust horizontal position if menu goes off-screen
+			if (menuLeft < 10) {
+				menuLeft = 10; // 10px from left edge
+			}
+			if (menuLeft + menuWidth > viewportWidth - 10) {
+				menuLeft = viewportWidth - menuWidth - 10; // 10px from right edge
+			}
+			
+			// Adjust vertical position if menu goes off-screen
+			if (menuTop + menuHeight > viewportHeight - 10) {
+				menuTop = buttonRect.top - menuHeight - 5; // Show above button
+			}
+			
+			// ✅ Apply positioning
+			menu.style.display = 'block';
+			menu.style.position = 'fixed';
+			menu.style.top = `${menuTop}px`;
+			menu.style.left = `${menuLeft}px`;
+			menu.style.right = 'auto'; // Reset right positioning
+			menu.style.zIndex = '999999';
+			menu.classList.add('positioned');
+			
+			console.log(`Menu positioned at: top=${menuTop}px, left=${menuLeft}px`);
+			
+			// Prevent menu from closing immediately
+			menu.onclick = function(e) {
+				e.stopPropagation();
+				e.stopImmediatePropagation();
+			};
+			
+			// ✅ Add backdrop for better click detection
+			const backdrop = document.createElement('div');
+			backdrop.className = 'menu-backdrop active';
+			backdrop.onclick = function() {
+				menu.style.display = 'none';
+				menu.classList.remove('positioned');
+				backdrop.remove();
+			};
+			document.body.appendChild(backdrop);
+			
+			// ✅ Outside click handler with better detection
+			setTimeout(() => {
+				const handleOutsideClick = function(e) {
+					if (!menu.contains(e.target) && 
+						!button.contains(e.target) &&
+						!e.target.closest('.btn-ex-action') &&
+						!e.target.closest('.menu-icon')) {
+						
+						menu.style.display = 'none';
+						menu.classList.remove('positioned');
+						backdrop.remove();
+						document.removeEventListener('click', handleOutsideClick);
+						console.log('Menu closed by outside click');
+					}
+				};
+				document.addEventListener('click', handleOutsideClick);
+			}, 300);
+			
+			console.log('Menu opened with fixed positioning');
+		}
+	}
+
+	// Thêm functions di chuyển bài tập
+	moveExerciseUp(exIndex) {
+		if (exIndex > 0) {
+			const temp = this.selectedExercises[exIndex];
+			this.selectedExercises[exIndex] = this.selectedExercises[exIndex - 1];
+			this.selectedExercises[exIndex - 1] = temp;
+			this.renderSelectedExercises();
+			this.showToast('Đã di chuyển bài tập lên trên', 'success');
+		}
+	}
+
+	moveExerciseDown(exIndex) {
+		if (exIndex < this.selectedExercises.length - 1) {
+			const temp = this.selectedExercises[exIndex];
+			this.selectedExercises[exIndex] = this.selectedExercises[exIndex + 1];
+			this.selectedExercises[exIndex + 1] = temp;
+			this.renderSelectedExercises();
+			this.showToast('Đã di chuyển bài tập xuống dưới', 'success');
+		}
+	}
+
+	duplicateExercise(exIndex) {
+		const exercise = { ...this.selectedExercises[exIndex] };
+		exercise.sets = exercise.sets.map(set => ({ ...set })); // Deep copy sets
+		this.selectedExercises.splice(exIndex + 1, 0, exercise);
+		this.renderSelectedExercises();
+		this.showToast('Đã nhân đôi bài tập', 'success');
+	}
 
     addExerciseNote(exIndex) {
         const ex = this.currentWorkout.exercises[exIndex];
@@ -1926,36 +2142,65 @@ class GymTracker {
         });
     }
 
-    exercisePreferencesTemplate(exIndex, event) {
-        const ex = this.selectedExercises[exIndex];
-        let unitOptions = ['kg', 'lb'];
-        if (ex.type === 'cardio' || /plank|run|minute/i.test(ex.name)) {
-            unitOptions = ['minute', 'reps'];
-        }
-        const currentUnit = ex.unit || unitOptions[0];
-        const menu = document.getElementById('unit-context-menu');
-        menu.innerHTML = unitOptions.map(u =>
-            `<button class="context-menu-btn${u===currentUnit?' selected':''}" data-unit="${u}">${u.toUpperCase()}</button>`
-        ).join('');
-        let x = event ? event.clientX : window.innerWidth/2, y = event ? event.clientY : window.innerHeight/2;
-        menu.style.left = x + 'px';
-        menu.style.top = y + 'px';
-        menu.style.display = 'flex';
-        menu.querySelectorAll('.context-menu-btn').forEach(btn => {
-            btn.onclick = () => {
-                ex.unit = btn.getAttribute('data-unit');
-                this.renderSelectedExercises();
-                this.showToast(`Đã đổi đơn vị sang ${ex.unit.toUpperCase()}`);
-                menu.style.display = 'none';
-            };
-        });
-        setTimeout(() => {
-            document.addEventListener('click', hideMenu, { once: true });
-        });
-        function hideMenu(e2) {
-            if (!menu.contains(e2.target)) menu.style.display = 'none';
-        }
-    }
+	exercisePreferencesTemplate(exIndex, event) {
+		const ex = this.selectedExercises[exIndex];
+		// Xác định đơn vị phù hợp cho bài tập
+		let unitOptions = ['kg', 'lb'];
+		if (ex.type === 'cardio' || /plank|run|minute/i.test(ex.name)) {
+			unitOptions = ['minute', 'reps'];
+		}
+		const currentUnit = ex.unit || unitOptions[0];
+
+		// Lấy element menu context
+		const menu = document.getElementById('unit-context-menu');
+
+		// Render menu lựa chọn đơn vị
+		menu.innerHTML = unitOptions.map(u =>
+			`<button class="context-menu-btn${u===currentUnit?' selected':''}" data-unit="${u}">
+				${u==='kg'?'Kilograms (kg)':u==='lb'?'Pounds (lb)':u.charAt(0).toUpperCase()+u.slice(1)}
+			</button>`
+		).join('');
+
+		// Hiển thị menu tại vị trí click
+		let x = event ? event.clientX : window.innerWidth/2;
+		let y = event ? event.clientY : window.innerHeight/2;
+		menu.style.left = x + 'px';
+		menu.style.top = y + 'px';
+		menu.style.display = 'flex';
+
+		// Gắn sự kiện cho từng nút đổi đơn vị
+		menu.querySelectorAll('.context-menu-btn').forEach(btn => {
+			btn.onclick = () => {
+				const newUnit = btn.getAttribute('data-unit');
+				// Nếu đổi kg <-> lb thì chuyển đổi cả số liệu các set
+				if ((ex.unit === 'kg' && newUnit === 'lb') ||
+					(ex.unit === 'lb' && newUnit === 'kg')) {
+					if (Array.isArray(ex.sets)) {
+						ex.sets.forEach(set => {
+							if (set.weight) {
+								set.weight = newUnit === 'lb'
+									? +(set.weight * 2.20462).toFixed(1)
+									: +(set.weight / 2.20462).toFixed(1);
+							}
+						});
+					}
+				}
+				ex.unit = newUnit;
+				this.renderSelectedExercises();
+				this.showToast(`Đã đổi đơn vị sang ${newUnit === 'kg' ? 'Kilograms (kg)' : newUnit === 'lb' ? 'Pounds (lb)' : newUnit}`);
+				menu.style.display = 'none';
+			};
+		});
+
+		// Ẩn menu khi click ra ngoài
+		setTimeout(() => {
+			document.addEventListener('click', function handler(e2) {
+				if (!menu.contains(e2.target)) menu.style.display = 'none';
+				document.removeEventListener('click', handler);
+			});
+		}, 50);
+	}
+
 
     // ===== DATA MANAGEMENT =====
     exportData() {
@@ -2544,7 +2789,21 @@ class NotificationManager {
         });
     }
 }
+// ✅ ADD: Window resize handler to reposition menus
+window.addEventListener('resize', function() {
+    // Close menus on resize to prevent positioning issues
+    app.closeAllMenus();
+});
 
+// ✅ ADD: Scroll handler to reposition or close menus
+window.addEventListener('scroll', function() {
+    // Reposition visible menus or close them
+    const visibleMenus = document.querySelectorAll('.exercise-menu[style*="display: block"]');
+    if (visibleMenus.length > 0) {
+        // For now, just close them on scroll
+        app.closeAllMenus();
+    }
+});
 // ===== APP INITIALIZATION =====
 try {
     const app = new GymTracker();

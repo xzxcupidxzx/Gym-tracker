@@ -861,10 +861,11 @@ body {
 
 /* ===== Workout Exercise Layout Fixes ===== */
 .workout-exercise {
-    background: var(--bg-tertiary); /* */
-    border-radius: 14px; /* */
-    margin-bottom: 18px; /* */
-    padding: 16px; /* */
+    background: #414141 !important;
+    border-radius: 14px;
+    margin-bottom: 18px;
+    padding: 16px;
+    border: 1px solid #555;
 }
 
 /* ✅ IMPROVED: Exercise header layout */
@@ -903,11 +904,10 @@ body {
 }
 
 .exercise-actions {
-    margin-left: 12px; /* */
-    display: flex; /* */
-    align-items: center; /* */
-    position: relative; /* */
-    flex-shrink: 0; /* */
+    display: flex !important;
+    align-items: center !important;
+    position: relative !important;
+    z-index: 99998 !important;
 }
 
 /* ===== Template Exercise Layout Fixes ===== */
@@ -997,20 +997,21 @@ body {
 }
 
 .exercise-menu {
-    position: absolute; /* */
-    top: 36px; /* */
-    right: 0; /* */
-    min-width: 200px; /* */
-    background: var(--bg-primary); /* */
-    border: 1px solid var(--border-color); /* */
-    border-radius: 12px; /* */
-    box-shadow: 0 4px 24px rgba(0,0,0,0.15); /* */
-    z-index: 100; /* */
-    padding: 8px 0; /* */
-    display: none; /* */
-    flex-direction: column; /* */
-    animation: fadeInScale 0.2s ease; /* */
+    position: absolute;
+    top: 36px;
+    right: 0;
+    min-width: 200px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+    z-index: var(--z-exercise-menu) !important; /* Sử dụng z-index cao hơn rest timer */
+    padding: 8px 0;
+    display: none;
+    flex-direction: column;
+    animation: fadeInScale 0.2s ease;
 }
+
 
 @keyframes fadeInScale {
     from {
@@ -1060,12 +1061,20 @@ body {
 
 .set-row, .set-row-header {
     display: flex; /* */
-    align-items: center; /* */
-    width: 100%; /* */
-    min-height: 44px; /* */
-    padding: 2px 0; /* */
+    grid-template-columns: 60px 1fr 1fr 80px 50px;
+    gap: 8px;
+    padding: 12px 8px;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    align-items: center;
 }
-
+.set-row-header > div {
+    text-align: center;
+    font-size: 0.9rem;
+}
 .set-row-header {
     font-weight: 600; /* */
     color: var(--text-secondary); /* */
@@ -1182,19 +1191,20 @@ body {
 }
 
 .rest-bar {
-    width: 100%; /* */
-    min-height: 32px; /* */
-    position: relative; /* */
-    background: var(--bg-primary); /* */
-    border-radius: var(--radius-full); /* */
-    border: 1px solid var(--border-color); /* */
-    overflow: hidden; /* */
-    display: flex; /* */
-    align-items: center; /* */
-    justify-content: center; /* */
-    cursor: pointer; /* */
-    transition: all 0.2s; /* */
-    box-shadow: 0 1px 4px rgba(0,0,0,0.05); /* */
+    width: 100%;
+    min-height: 32px;
+    position: relative;
+    background: var(--bg-primary);
+    border-radius: var(--radius-full);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    z-index: 1; /* Z-index thấp để không che menu */
 }
 
 .rest-bar:hover {
@@ -1820,7 +1830,7 @@ body {
         .modal-footer {
         position: sticky !important; /* */
         bottom: 0; /* */
-        z-index: 2; /* */
+        z-index: 1; /* */
         background: var(--bg-primary); /* */
         padding-bottom: calc(env(safe-area-inset-bottom, 12px) + 8px) !important; /* */
         box-shadow: 0 -2px 8px rgba(0,0,0,0.1); /* */
@@ -1831,16 +1841,16 @@ body {
 
 /* ===== Context Menu ===== */
 .context-menu {
-    min-width: 120px; /* */
-    background: var(--bg-primary); /* */
-    border: 1px solid var(--border-color); /* */
-    border-radius: 12px; /* */
-    box-shadow: 0 6px 24px rgba(0,0,0,0.15); /* */
-    padding: 6px 0; /* */
-    display: flex; /* */
-    flex-direction: column; /* */
-    position: absolute; /* */
-    z-index: 1200; /* */
+    min-width: 120px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.15);
+    padding: 6px 0;
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    z-index: 12000 !important; /* Đảm bảo context menu cũng nằm trên rest timer */
 }
 
 .context-menu-btn {
