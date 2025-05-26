@@ -1,4 +1,20 @@
 // js/app.js - Modern Gym Tracker Application
+function playBeep() {
+    const beep = document.getElementById('sound-beep');
+    if (beep) {
+        beep.currentTime = 0;
+        beep.volume = 0.2; // Giảm xuống 20% (hoặc giá trị tùy ý, nhỏ hơn 1.0)
+        beep.play();
+    }
+}
+function playDone() {
+    const done = document.getElementById('sound-done');
+    if (done) {
+        done.currentTime = 0;
+        done.volume = 0.4; // Ding có thể lớn hơn chút, tuỳ bạn
+        done.play();
+    }
+}
 
 class GymTracker {
 
@@ -14,6 +30,7 @@ class GymTracker {
 		// Load data từ localStorage
 		this.templates = this.loadData('templates') || [];
 		this.exercises = this.loadData('exercises') || this.getDefaultExercises();
+		this.currentExerciseSearch = '';
 		this.mergeDefaultExercises();
 		this.workoutHistory = this.loadData('workoutHistory') || [];
 		
@@ -104,7 +121,8 @@ class GymTracker {
         });
         
         document.getElementById('exercise-select-search')?.addEventListener('input', (e) => {
-            this.filterExerciseSelection(e.target.value);
+            this.currentExerciseSearch = e.target.value;
+			this.filterExerciseSelection(e.target.value);
         });
         
         // Filter selects
@@ -942,10 +960,12 @@ class GymTracker {
 		this.setRestIntervals[`${exIndex}-${setIndex}`] = setInterval(() => {
 			timeLeft--;
 			timerSpan.textContent = this.formatTime(timeLeft);
+			if (timeLeft > 0 && timeLeft <= 10) playBeep(); // beep 3s cuối
 			if (timeLeft <= 0) {
 				clearInterval(this.setRestIntervals[`${exIndex}-${setIndex}`]);
 				timerSpan.textContent = "Done";
 				progressBar.style.width = '0%';
+				playDone(); // ding khi hết giờ
 			}
 		}, 1000);
 	}
@@ -995,13 +1015,15 @@ class GymTracker {
 			progressBar.style.width = '0%';
 		}, 50);
 
-		this.setRestIntervals[`last-${exIndex}`] = setInterval(() => {
+		this.setRestIntervals[`${exIndex}-${setIndex}`] = setInterval(() => {
 			timeLeft--;
 			timerSpan.textContent = this.formatTime(timeLeft);
+			if (timeLeft > 0 && timeLeft <= 10) playBeep(); // beep 3s cuối
 			if (timeLeft <= 0) {
-				clearInterval(this.setRestIntervals[`last-${exIndex}`]);
+				clearInterval(this.setRestIntervals[`${exIndex}-${setIndex}`]);
 				timerSpan.textContent = "Done";
 				progressBar.style.width = '0%';
+				playDone(); // ding khi hết giờ
 			}
 		}, 1000);
 	}
@@ -1626,7 +1648,7 @@ class GymTracker {
 			});
         }
         
-        this.renderExerciseSelection();
+        this.filterExerciseSelection(this.exerciseSelectSearchValue); // <-- Sửa lại để giữ filter
     }
     
     confirmExerciseSelection() {
@@ -1867,21 +1889,17 @@ class GymTracker {
         
         let timeLeft = seconds;
         
-        this.restTimer = setInterval(() => {
-            timeLeft--;
-            const minutes = Math.floor(timeLeft / 60);
-            const secs = timeLeft % 60;
-            
-            restTimeEl.textContent = `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-            
-            if (timeLeft <= 0) {
-                this.skipRest();
-                // Play sound or vibrate
-                if (navigator.vibrate) {
-                    navigator.vibrate([200, 100, 200]);
-                }
-            }
-        }, 1000);
+		this.setRestIntervals[`${exIndex}-${setIndex}`] = setInterval(() => {
+			timeLeft--;
+			timerSpan.textContent = this.formatTime(timeLeft);
+			if (timeLeft > 0 && timeLeft <= 10) playBeep(); // beep 3s cuối
+			if (timeLeft <= 0) {
+				clearInterval(this.setRestIntervals[`${exIndex}-${setIndex}`]);
+				timerSpan.textContent = "Done";
+				progressBar.style.width = '0%';
+				playDone(); // ding khi hết giờ
+			}
+		}, 1000);
     }
     
     skipRest() {
