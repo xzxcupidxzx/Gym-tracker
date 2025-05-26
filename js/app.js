@@ -1627,29 +1627,31 @@ class GymTracker {
 		}).join('');
     }
     
-    toggleExerciseSelection(exerciseId) {
-        const exercise = this.exercises.find(ex => ex.id === exerciseId);
-        if (!exercise) return;
-        
-        const index = this.selectedExercises.findIndex(ex => ex.id === exerciseId);
-        
-        if (index >= 0) {
-            this.selectedExercises.splice(index, 1);
-        } else {
+	toggleExerciseSelection(exerciseId) {
+		const exercise = this.exercises.find(ex => ex.id === exerciseId);
+		if (!exercise) return;
+
+		const index = this.selectedExercises.findIndex(ex => ex.id === exerciseId);
+		if (index >= 0) {
+			this.selectedExercises.splice(index, 1);
+		} else {
+			// LẤY ĐẦY ĐỦ THÔNG TIN BÀI TẬP
 			this.selectedExercises.push({
 				id: exercise.id,
 				name: exercise.name,
 				muscle: exercise.muscle,
+				equipment: exercise.equipment,
+				type: exercise.type,
+				unit: exercise.unit,
 				sets: [
 					{ targetReps: '8-12', restTime: '1:00', completed: false },
 					{ targetReps: '8-12', restTime: '1:00', completed: false },
 					{ targetReps: '8-12', restTime: '1:00', completed: false }
 				]
 			});
-        }
-        
-        this.filterExerciseSelection(this.exerciseSelectSearchValue); // <-- Sửa lại để giữ filter
-    }
+		}
+		this.filterExerciseSelection(this.exerciseSelectSearchValue);
+	}
     
     confirmExerciseSelection() {
         this.closeExerciseSelect();
