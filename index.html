@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1">
-	<meta charset="UTF-8">
+    <meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Gym Tracker - Quản lý tập luyện thông minh</title>
     <meta name="description" content="Ứng dụng theo dõi và quản lý tập luyện gym với AI">
     <meta name="theme-color" content="#4CAF50">
@@ -19,14 +19,7 @@
 	
     <!-- Chart.js Preload (cho analytics) -->
     <link rel="preload" href="https://cdn.jsdelivr.net/npm/chart.js" as="script">
-    <nav class="main-nav">
-        <a href="#home" class="nav-link active" data-page="home">Trang chủ</a>
-        <a href="#templates" class="nav-link" data-page="templates">Templates</a>
-        <a href="#exercises" class="nav-link" data-page="exercises">Bài tập</a>
-        <a href="#history" class="nav-link" data-page="history">Lịch sử</a>
-        <a href="#analytics" class="nav-link" data-page="analytics">Analytics</a>
-        <a href="#" class="nav-link" onclick="app.openSettings()">Cài đặt</a>
-    </nav>
+	
 </head>
 <body>
     <!-- Install Banner -->
@@ -691,13 +684,12 @@
     <div id="unit-context-menu" class="context-menu" style="display:none;position:absolute;z-index:1200;"></div>
 
     <!-- Main JS -->
-    <script src="/js/core.js"></script>
-    <script src="/js/exercises.js"></script>
-    <script src="/js/history.js"></script>
-    <script src="/js/backend.js"></script>
-    <script src="/js/ai.js"></script>
-    <script src="/js/analytics_charts.js"></script>
-    <script src="/js/app.js"></script> </body>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<script src="js/analytics.js"></script>
+	<script src="js/backend.js"></script>
+	<script src="js/ai.js"></script>
+	<script src="js/app.js"></script>
+
     <!-- PWA & Service Worker, Install Banner, Online/Offline, New Version Notify -->
     <script>
         if ('serviceWorker' in navigator) {

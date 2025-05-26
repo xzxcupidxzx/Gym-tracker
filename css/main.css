@@ -2030,3 +2030,8 @@ html, body {
         padding: 12px !important;
     }
 }
+@media (max-width: 600px) {
+    input, select, textarea, button {
+        font-size: 16px !important;
+    }
+}
