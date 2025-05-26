@@ -39,6 +39,7 @@ class GymTracker {
 		this.exerciseLibrary = new ExerciseLibrary();
 		this.exerciseLibrary.exercises = this.exercises;
 		this.notifications = new NotificationManager();
+		this.exerciseSelectSearchValue = '';
 
 		// Initialize
 		this.init();
@@ -1127,20 +1128,16 @@ class GymTracker {
 		e.stopPropagation();
 		// Đóng tất cả menu khác trước
 		document.querySelectorAll('.exercise-menu').forEach(menu => menu.style.display = 'none');
-
 		// Toggle menu hiện tại
 		const menu = document.getElementById(`edit-menu-${exIndex}`);
 		if (menu) {
-			// Nếu đang ẩn thì hiện, nếu đang hiện thì ẩn
 			if (menu.style.display === 'block') {
 				menu.style.display = 'none';
 			} else {
 				menu.style.display = 'block';
-
-				// Đóng menu khi click ra ngoài (add 1 lần, rồi remove)
+				// Chỉ đóng khi click ngoài menu
 				setTimeout(() => {
 					function hideMenu(ev) {
-						// Nếu click ngoài menu thì ẩn menu
 						if (!menu.contains(ev.target) && ev.target !== e.target) {
 							menu.style.display = 'none';
 							document.removeEventListener('click', hideMenu);
@@ -1151,6 +1148,7 @@ class GymTracker {
 			}
 		}
 	}
+
 
 	editTemplateExercise(exIndex) {
 		// Ví dụ: chỉnh số set, mục tiêu rep,...
@@ -1562,6 +1560,7 @@ class GymTracker {
     }
     
 	selectExercises() {
+		this.exerciseSelectSearchValue = '';
 		this.renderExerciseSelection();
 		document.getElementById('exercise-select-modal').classList.add('active');
 	}
@@ -1592,7 +1591,7 @@ class GymTracker {
     }
     
     filterExerciseSelection(search) {
-        const searchTerm = search.toLowerCase();
+        const searchTerm = (search || '').toLowerCase();
         const filtered = this.exercises.filter(exercise => 
             exercise.name.toLowerCase().includes(searchTerm) ||
             this.getMuscleName(exercise.muscle).toLowerCase().includes(searchTerm)
@@ -1635,7 +1634,6 @@ class GymTracker {
 		if (index >= 0) {
 			this.selectedExercises.splice(index, 1);
 		} else {
-			// LẤY ĐẦY ĐỦ THÔNG TIN BÀI TẬP
 			this.selectedExercises.push({
 				id: exercise.id,
 				name: exercise.name,
@@ -1650,7 +1648,7 @@ class GymTracker {
 				]
 			});
 		}
-		this.filterExerciseSelection(this.exerciseSelectSearchValue);
+		this.filterExerciseSelection(this.exerciseSelectSearchValue || '');
 	}
     
     confirmExerciseSelection() {
@@ -1718,6 +1716,10 @@ class GymTracker {
 						<div class="set-actions">
 							<button class="btn-ex-action" style="font-size:1.2em"
 								onclick="app.removeTemplateSet(${exIndex},${setIndex})" title="Xóa set">×</button>
+						</div>
+						<div class="exercise-move">
+							<button onclick="app.moveExerciseUp(${exIndex})" ${exIndex === 0 ? 'disabled' : ''}>⬆️</button>
+							<button onclick="app.moveExerciseDown(${exIndex})" ${exIndex === this.selectedExercises.length - 1 ? 'disabled' : ''}>⬇️</button>
 						</div>
 					</div>
 				`;
@@ -1841,6 +1843,21 @@ class GymTracker {
 			this.showToast("Đã thay thế bài tập.");
 		});
 	}
+	moveExerciseUp(exIndex) {
+		if (exIndex <= 0) return;
+		const tmp = this.selectedExercises[exIndex];
+		this.selectedExercises[exIndex] = this.selectedExercises[exIndex - 1];
+		this.selectedExercises[exIndex - 1] = tmp;
+		this.renderSelectedExercises();
+	}
+	moveExerciseDown(exIndex) {
+		if (exIndex >= this.selectedExercises.length - 1) return;
+		const tmp = this.selectedExercises[exIndex];
+		this.selectedExercises[exIndex] = this.selectedExercises[exIndex + 1];
+		this.selectedExercises[exIndex + 1] = tmp;
+		this.renderSelectedExercises();
+	}
+	
 	createSupersetInTemplate(exIndex) {
 		this.showExercisePicker((otherExercise) => {
 			const supersetId = Date.now() + '-' + Math.random().toString(36).substr(2,5);
