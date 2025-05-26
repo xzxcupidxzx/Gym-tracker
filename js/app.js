@@ -1139,6 +1139,8 @@ class GymTracker {
                                 <button onclick="app.createSuperset(${exIndex})">⎯⎯ Create Superset</button>
                                 <button onclick="app.exercisePreferences(${exIndex}, event)">⚙️ Preferences</button>
                                 <button class="danger" onclick="app.removeExercise(${exIndex})">❌ Remove</button>
+								<button onclick="app.moveExerciseUp(${exIndex})" ${exIndex === 0 ? 'disabled style="opacity:0.5;"' : ''}>⬆️ Di chuyển lên</button>
+								<button onclick="app.moveExerciseDown(${exIndex})" ${exIndex === (this.selectedExercises.length-1) ? 'disabled style="opacity:0.5;"' : ''}>⬇️ Di chuyển xuống</button>
                             </div>
                         </div>
                     </div>
@@ -2022,13 +2024,31 @@ class GymTracker {
             `;
 
             return `
-            <div class="workout-exercise" style="background:var(--bg-tertiary);border-radius:14px;margin-bottom:18px;padding:16px;">
-                <div class="workout-exercise-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                    <span class="workout-exercise-name" style="font-size:1.13em;font-weight:600;">${exercise.name}</span>
-                    <div class="exercise-actions" style="display:flex;align-items:center;position:relative;">
-                        <button class="btn-ex-action" onclick="app.toggleEditMenu(event, ${exIndex})" title="Tùy chọn">
-                            <span class="menu-icon">⋯</span>
-                        </button>
+				<div class="workout-exercise" style="background:var(--bg-tertiary);border-radius:14px;margin-bottom:18px;padding:16px;">
+					<div class="workout-exercise-header" style="display:flex;align-items:center;justify-content:space-between;">
+						<span class="workout-exercise-name" style="font-size:1.13em;font-weight:600;">
+							${exercise.name}
+						</span>
+						<div class="exercise-actions" style="display:flex;align-items:center;gap:4px;position:relative;">
+							<button class="btn-ex-action"
+								onclick="app.moveExerciseUp(${exIndex})"
+								title="Di chuyển lên"
+								${exIndex === 0 ? 'disabled style="opacity:0.5;"' : ''}>
+								⬆️
+							</button>
+							<button class="btn-ex-action"
+								onclick="app.moveExerciseDown(${exIndex})"
+								title="Di chuyển xuống"
+								${exIndex === (this.selectedExercises.length-1) ? 'disabled style="opacity:0.5;"' : ''}>
+								⬇️
+							</button>
+							<button class="btn-ex-action"
+								onclick="app.toggleEditMenuTemplate(event, ${exIndex})"
+								title="Tùy chọn">
+								<span class="menu-icon">⋯</span>
+							</button>
+						</div>
+
                         <div class="exercise-menu" id="edit-menu-${exIndex}" style="display:none;z-index:1051;right:0;top:36px;position:absolute;">
                             <button onclick="app.addNoteToTemplateExercise(${exIndex})">📝 Ghi chú</button>
                             <button onclick="app.addStickyToTemplateExercise(${exIndex})">📌 Sticky Note</button>
@@ -2038,6 +2058,9 @@ class GymTracker {
                             <button onclick="app.createSupersetInTemplate(${exIndex})">⎯⎯ Create Superset</button>
                             <button onclick="app.exercisePreferencesTemplate(${exIndex}, event)">⚙️ Preferences</button>
                             <button class="danger" onclick="app.removeSelectedExercise(${exIndex})">❌ Xóa bài</button>
+							<button onclick="app.moveExerciseUp(${exIndex})" ${exIndex === 0 ? 'disabled style="opacity:0.5;"' : ''}>⬆️ Di chuyển lên</button>
+							<button onclick="app.moveExerciseDown(${exIndex})" ${exIndex === (this.selectedExercises.length-1) ? 'disabled style="opacity:0.5;"' : ''}>⬇️ Di chuyển xuống</button>
+							<hr style="margin:4px 0;border:none;border-top:1px solid var(--border-color);">
                         </div>
                     </div>
                 </div>
