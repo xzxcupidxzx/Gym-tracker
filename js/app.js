@@ -1,9 +1,9 @@
-// js/app.js - Modern Gym Tracker Application
+// js/app.js - Fixed Modern Gym Tracker Application
 function playBeep() {
     const beep = document.getElementById('sound-beep');
     if (beep) {
         beep.currentTime = 0;
-        beep.volume = 0.2; // Giảm xuống 20% (hoặc giá trị tùy ý, nhỏ hơn 1.0)
+        beep.volume = 0.2;
         beep.play();
     }
 }
@@ -11,13 +11,12 @@ function playDone() {
     const done = document.getElementById('sound-done');
     if (done) {
         done.currentTime = 0;
-        done.volume = 0.4; // Ding có thể lớn hơn chút, tuỳ bạn
+        done.volume = 0.4;
         done.play();
     }
 }
 
 class GymTracker {
-
 	constructor() {
 		// Biến trạng thái
 		this.currentPage = 'home';
@@ -34,7 +33,6 @@ class GymTracker {
 		this.mergeDefaultExercises();
 		this.workoutHistory = this.loadData('workoutHistory') || [];
 		
-		// <<< ✅ CHỈ CÁC DÒNG NÀY TRONG CONSTRUCTOR
 		this.supersetManager = new SupersetManager();
 		this.exerciseLibrary = new ExerciseLibrary();
 		this.exerciseLibrary.exercises = this.exercises;
@@ -45,29 +43,23 @@ class GymTracker {
 		this.init();
 	}
 
-	// ===== Initialization =====
-	// ✅ ĐẶT METHOD NÀY Ở ĐÂY, NGOÀI CONSTRUCTOR:
-		getAnalytics() {
-			if (!this.analytics && window.AdvancedAnalytics) {
-				try {
-					this.analytics = new AdvancedAnalytics(this);
-				} catch (error) {
-					console.error('Analytics failed to load:', error);
-					return null;
-				}
+	getAnalytics() {
+		if (!this.analytics && window.AdvancedAnalytics) {
+			try {
+				this.analytics = new AdvancedAnalytics(this);
+			} catch (error) {
+				console.error('Analytics failed to load:', error);
+				return null;
 			}
-			return this.analytics;
 		}
-
-    
-    // ===== Initialization =====
+		return this.analytics;
+	}
 
 	init() {
         this.setupEventListeners();
         this.loadPage(this.currentPage);
         this.updateStats();
         
-        // Save default exercises if needed
         if (!this.loadData('exercises')) {
             this.saveData('exercises', this.exercises);
         }
@@ -80,7 +72,7 @@ class GymTracker {
 		let added = false;
 		defaultExercises.forEach(defEx => {
 			if (!userIds.includes(defEx.id)) {
-				userExercises.push(defEx); // thêm mới
+				userExercises.push(defEx);
 				added = true;
 			}
 		});
@@ -88,7 +80,6 @@ class GymTracker {
 	}
     
     setupEventListeners() {
-        // Navigation
 		document.querySelectorAll('.nav-link').forEach(link => {
 		  link.addEventListener('click', (e) => {
 			e.preventDefault();
@@ -96,7 +87,7 @@ class GymTracker {
 			this.loadPage(page);
 		  });
 		});
-        // Mobile menu toggle
+
         const menuToggle = document.getElementById('menu-toggle');
         if (menuToggle) {
             menuToggle.addEventListener('click', () => {
@@ -105,14 +96,12 @@ class GymTracker {
         }
 		const notificationToggle = document.getElementById('enable-notifications');
 		if (notificationToggle) {
-		  // Đọc trạng thái cũ từ localStorage khi load
 		  notificationToggle.checked = localStorage.getItem('gymTracker_notifications') !== '0';
-		  // Gán sự kiện lưu trạng thái mới
 		  notificationToggle.addEventListener('change', function() {
 			localStorage.setItem('gymTracker_notifications', this.checked ? '1' : '0');
 		  });
 		}
-        // Search inputs
+
         document.getElementById('template-search')?.addEventListener('input', (e) => {
             this.filterTemplates(e.target.value);
         });
@@ -126,7 +115,6 @@ class GymTracker {
 			this.filterExerciseSelection(e.target.value);
         });
         
-        // Filter selects
         document.getElementById('template-filter')?.addEventListener('change', (e) => {
             this.filterTemplates('', e.target.value);
         });
@@ -136,21 +124,17 @@ class GymTracker {
         });
     }
     
-    // ===== Page Navigation =====
     loadPage(page) {
-        // Update active nav
         document.querySelectorAll('.nav-link').forEach(link => {
             link.classList.toggle('active', link.dataset.page === page);
         });
         
-        // Update active page
         document.querySelectorAll('.page').forEach(pageEl => {
             pageEl.classList.toggle('active', pageEl.id === `${page}-page`);
         });
         
         this.currentPage = page;
         
-        // Load page content
 		switch(page) {
 			case 'home':
 				this.loadHomePage();
@@ -170,7 +154,6 @@ class GymTracker {
 					if (analytics) {
 						analytics.createVolumeChart('volume-chart');
 						analytics.createMuscleDistributionChart('muscle-distribution-chart');
-						// analytics.createWorkoutHeatmap('heatmap-chart'); // Tạm comment nếu lỗi
 						analytics.createPRTimeline('pr-chart');
 						analytics.createStrengthStandardsChart('strength-chart');
 					}
@@ -179,7 +162,6 @@ class GymTracker {
 		}
 	}
     
-    // ===== Home Page =====
     loadHomePage() {
         this.renderRecentTemplates();
         this.updateStats();
@@ -190,13 +172,10 @@ class GymTracker {
         const recentTemplates = this.templates.slice(0, 4);
 		const cachedWorkout = this.loadData('currentWorkout');
 		if (cachedWorkout && !cachedWorkout.endTime) {
-			// Tìm template name
 			const template = this.templates.find(t => t.id === cachedWorkout.templateId);
 			const templateName = template ? template.name : 'Buổi tập chưa đặt tên';
-			// Xóa banner cũ nếu có
 			const oldBanner = document.getElementById('resume-workout-banner');
 			if (oldBanner) oldBanner.remove();
-			// Thêm mới
 			container.insertAdjacentHTML('beforebegin', `
 				<div id="resume-workout-banner" class="resume-workout-banner" style="margin-bottom:16px;display:flex;gap:12px;align-items:center;">
 					<div style="flex:1;">
@@ -225,11 +204,9 @@ class GymTracker {
     }
     
     updateStats() {
-        // Calculate stats
         const totalWorkouts = this.workoutHistory.length;
         const totalTemplates = this.templates.length;
         
-        // This week workouts
         const weekStart = new Date();
         weekStart.setDate(weekStart.getDate() - weekStart.getDay());
         weekStart.setHours(0, 0, 0, 0);
@@ -238,7 +215,6 @@ class GymTracker {
             new Date(workout.date) >= weekStart
         ).length;
         
-        // Total volume
         const totalVolume = this.workoutHistory.reduce((total, workout) => {
             return total + workout.exercises.reduce((sum, ex) => {
                 return sum + ex.sets.reduce((setSum, set) => {
@@ -247,14 +223,12 @@ class GymTracker {
             }, 0);
         }, 0);
         
-        // Update DOM
         document.getElementById('total-workouts').textContent = totalWorkouts;
         document.getElementById('total-templates').textContent = totalTemplates;
         document.getElementById('this-week').textContent = thisWeekWorkouts;
         document.getElementById('total-volume').textContent = Math.round(totalVolume);
     }
     
-    // ===== Templates Page =====
     loadTemplatesPage() {
         this.renderAllTemplates();
     }
@@ -307,8 +281,9 @@ class GymTracker {
             </div>
         `;
     }
+
 	showTemplatePreview(templateId) {
-		this.closeAllModals(); // Thêm dòng này!
+		this.closeAllModals();
 		const template = this.templates.find(t => t.id === templateId);
 		if (!template) return;
 
@@ -329,9 +304,9 @@ class GymTracker {
 		`).join('');
 
 		document.getElementById('template-preview-list').innerHTML = list;
-
 		document.getElementById('template-preview-modal').classList.add('active');
 	} 
+
 	editTemplateFromPreview() {
 		if (!this.currentTemplate) return;
 		this.closeTemplatePreview();
@@ -344,10 +319,10 @@ class GymTracker {
 			this.startWorkout(this.currentTemplate.id);
 	}
 
-
 	closeTemplatePreview() {
 		document.getElementById('template-preview-modal').classList.remove('active');
 	}
+
     filterTemplates(search = '', level = '') {
         const searchInput = document.getElementById('template-search');
         const filterSelect = document.getElementById('template-filter');
@@ -372,7 +347,6 @@ class GymTracker {
         }
     }
     
-    // ===== Exercises Page =====
     loadExercisesPage() {
         this.renderAllExercises();
     }
@@ -398,23 +372,26 @@ class GymTracker {
             this.createExerciseCard(exercise)
         ).join('');
     }
+
 	openEditExerciseModal(exerciseId) {
 		this.editingExerciseId = exerciseId;
 		const exercise = this.exercises.find(e => e.id === exerciseId);
 		if (!exercise) return this.showToast("Không tìm thấy bài tập!", "error");
-		// Set form values
+
 		document.getElementById('exercise-edit-name').value = exercise.name || '';
 		document.getElementById('exercise-edit-muscle').value = exercise.muscle || '';
 		document.getElementById('exercise-edit-type').value = exercise.type || 'strength';
 		document.getElementById('exercise-edit-equipment').value = exercise.equipment || '';
 		document.getElementById('exercise-edit-unit').value = exercise.unit || 'kg';
-		// Show modal
+
 		document.getElementById('exercise-edit-modal').classList.add('active');
 	}
+
 	closeEditExerciseModal() {
 		document.getElementById('exercise-edit-modal').classList.remove('active');
 		this.editingExerciseId = null;
 	}
+
 	saveEditExercise() {
 		const id = this.editingExerciseId;
 		const exercise = this.exercises.find(e => e.id === id);
@@ -439,6 +416,7 @@ class GymTracker {
 		this.closeEditExerciseModal();
 		this.showToast("Đã cập nhật bài tập!", "success");
 	}
+
 	exportExercises() {
 		const data = this.exercises;
 		const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -452,6 +430,7 @@ class GymTracker {
 		URL.revokeObjectURL(url);
 		this.showToast('Đã xuất danh sách bài tập!', 'success');
 	}
+
 	importExercises(event) {
 		const file = event.target.files[0];
 		if (!file) {
@@ -466,7 +445,6 @@ class GymTracker {
 					this.showToast('File không hợp lệ (không phải mảng)', 'error');
 					return;
 				}
-				// Option: Gộp vào hoặc thay toàn bộ
 				if (!confirm('Import sẽ thay thế toàn bộ danh sách bài tập hiện tại. Tiếp tục?')) return;
 				this.exercises = data;
 				this.saveData('exercises', this.exercises);
@@ -478,15 +456,12 @@ class GymTracker {
 		};
 		reader.readAsText(file);
 	}
-	// Hàm mở modal
 	
 	openAddExerciseModal() {
 		document.getElementById('exercise-add-form').reset();
 		document.getElementById('exercise-add-modal').classList.add('active');
-		// Reset chọn chip
 		document.querySelectorAll('#exercise-add-muscle-group .chip-btn').forEach(btn => btn.classList.remove('selected'));
 		document.getElementById('exercise-add-muscle').value = '';
-		// Lắng nghe sự kiện chọn chip
 		if (!window._muscleChipSetup) {
 			document.querySelectorAll('#exercise-add-muscle-group .chip-btn').forEach(btn => {
 				btn.onclick = function() {
@@ -499,12 +474,10 @@ class GymTracker {
 		}
 	}
 
-	// Đóng modal
 	closeAddExerciseModal() {
 		document.getElementById('exercise-add-modal').classList.remove('active');
 	}
 
-	// Lưu bài tập mới
 	saveAddExercise() {
 		const name = document.getElementById('exercise-add-name').value.trim();
 		const muscle = document.getElementById('exercise-add-muscle').value;
@@ -515,7 +488,6 @@ class GymTracker {
 		if (!name) return this.showToast("Tên bài tập không được để trống!", "error");
 		if (!muscle) return this.showToast("Vui lòng chọn nhóm cơ!", "error");
 
-		// Kiểm tra trùng tên nếu cần
 		if (this.exercises.some(e => e.name.toLowerCase() === name.toLowerCase() && e.muscle === muscle)) {
 			this.showToast("Bài tập đã tồn tại!", "warning");
 			return;
@@ -537,7 +509,6 @@ class GymTracker {
 		this.showToast("Đã thêm bài tập mới!", "success");
 	}
 
-
 	createExerciseCard(exercise) {
 		return `
 			<div class="exercise-card">
@@ -551,6 +522,7 @@ class GymTracker {
 			</div>
 		`;
 	}
+
 	createExercise() {
 		const name = prompt("Tên bài tập mới:");
 		if (!name) return;
@@ -569,10 +541,10 @@ class GymTracker {
 		this.renderAllExercises();
 		this.showToast("Đã thêm bài tập mới!", "success");
 	}
+
 	editExercise(exerciseId) {
 		const exercise = this.exercises.find(e => e.id === exerciseId);
 		if (!exercise) return this.showToast("Không tìm thấy bài tập!", "error");
-		// Hiện modal chỉnh sửa, hoặc prompt đơn giản để chỉnh tên/nhóm cơ
 		const newName = prompt("Sửa tên bài tập:", exercise.name);
 		if (newName !== null && newName.trim() !== "") {
 			exercise.name = newName.trim();
@@ -580,8 +552,8 @@ class GymTracker {
 			this.renderAllExercises();
 			this.showToast("Đã cập nhật tên bài tập!", "success");
 		}
-		// Có thể mở rộng: thêm chỉnh nhóm cơ, loại bài, thiết bị...
 	}
+
 	deleteExercise(exerciseId) {
 		if (!confirm("Bạn chắc chắn muốn xóa bài tập này?")) return;
 		const idx = this.exercises.findIndex(e => e.id === exerciseId);
@@ -592,6 +564,7 @@ class GymTracker {
 			this.showToast("Đã xóa bài tập.", "success");
 		}
 	}
+
     filterExercises(search = '', muscle = '') {
         const searchInput = document.getElementById('exercise-search');
         const filterSelect = document.getElementById('muscle-filter');
@@ -616,7 +589,6 @@ class GymTracker {
         }
     }
     
-    // ===== History Page =====
     loadHistoryPage() {
         this.renderHistory();
     }
@@ -669,9 +641,7 @@ class GymTracker {
         `;
     }
     
-    // ===== Workout Functions =====
 	startQuickWorkout() {
-		// Check workout đang dở trong localStorage
 		const cachedWorkout = this.loadData('currentWorkout');
 		if (cachedWorkout && !cachedWorkout.endTime) {
 			if (confirm("Bạn đang có buổi tập chưa hoàn thành. Tiếp tục không?")) {
@@ -684,16 +654,17 @@ class GymTracker {
 				this.currentWorkout = null;
 			}
 		}
-		// Nếu không có workout dở, hoặc user chọn bắt đầu mới
+
 		if (this.templates.length === 0) {
 			this.showToast('Bạn cần tạo template trước!', 'warning');
 			this.createTemplate();
 			return;
 		}
-		// Start với template gần đây nhất
+
 		const recentTemplate = this.templates[0];
 		this.startWorkout(recentTemplate.id);
 	}
+
 	resumeWorkout() {
 		const cachedWorkout = this.loadData('currentWorkout');
 		if (!cachedWorkout) return;
@@ -702,51 +673,47 @@ class GymTracker {
 		this.showWorkoutModal(template);
 		this.startWorkoutTimer();
 	}
+
 	editResumeWorkout() {
 		const cachedWorkout = this.loadData('currentWorkout');
 		if (!cachedWorkout) return;
-		// Ví dụ: cho phép chỉnh lại sets, notes, hoặc đơn giản chỉ alert
 		alert('Bạn có thể sửa trực tiếp trong khi tập. (Có thể mở rộng UX này)');
-		// Nếu muốn mở workout modal ngay luôn:
 		this.resumeWorkout();
 	}
-// Xóa workout đang dở
+
 	deleteResumeWorkout() {
 		if (confirm("Bạn chắc chắn muốn xoá buổi tập chưa hoàn thành này?")) {
 			this.saveData('currentWorkout', null);
 			this.currentWorkout = null;
-			// Xoá banner và render lại trang home để ẩn nút
 			const banner = document.getElementById('resume-workout-banner');
 			if (banner) banner.remove();
 			this.showToast('Đã xoá buổi tập chưa hoàn thành.', 'success');
 		}
 	}
+
+	// ✅ FIXED: Properly transfer template data to workout
 	startWorkout(templateId) {
-		// 1. Check có workout đang dở không
 		const cachedWorkout = this.loadData('currentWorkout');
 		if (
 			cachedWorkout &&
 			!cachedWorkout.endTime &&
-			cachedWorkout.templateId === templateId // chỉ hỏi nếu đúng template
+			cachedWorkout.templateId === templateId
 		) {
-			// Nếu có workout đang dở đúng template này thì hỏi user
 			if (confirm("Bạn đang có buổi tập chưa hoàn thành. Tiếp tục không?")) {
 				this.currentWorkout = cachedWorkout;
 				this.showWorkoutModal(this.templates.find(t => t.id === cachedWorkout.templateId));
 				this.startWorkoutTimer();
 				return;
 			} else {
-				// User muốn bắt đầu mới => xóa trạng thái cũ
 				this.saveData('currentWorkout', null);
 				this.currentWorkout = null;
 			}
 		}
 
-		// 2. Nếu không có workout cũ, hoặc user chọn bắt đầu mới
 		const template = this.templates.find(t => t.id === templateId);
 		if (!template) return;
 
-		// 3. Tạo workout mới
+		// ✅ FIX: Properly transfer target values to actual values
 		this.currentWorkout = {
 			id: this.generateId(),
 			templateId: template.id,
@@ -755,23 +722,23 @@ class GymTracker {
 			exercises: template.exercises.map(ex => ({
 				...ex,
 				sets: ex.sets.map(set => ({
-					...set,
-					weight: 0,
-					reps: 0,
-					completed: false
+					weight: set.targetWeight || 0,
+					reps: set.targetReps || 0,
+					targetWeight: set.targetWeight || 0,
+					targetReps: set.targetReps || '',
+					restTime: set.restTime || '1:00',
+					completed: false,
+					isWarmup: set.isWarmup || false,
+					previous: set.previous || ''
 				})),
-				restAfterLastSet: "1:00"
+				restAfterLastSet: ex.restAfterLastSet || "1:00"
 			}))
 		};
 
-		// 4. Lưu lại vào localStorage
 		this.saveData('currentWorkout', this.currentWorkout);
-
-		// 5. Show modal và bắt đầu timer
 		this.showWorkoutModal(template);
 		this.startWorkoutTimer();
 	}
-
     
     showWorkoutModal(template) {
 		this.closeAllModals();
@@ -779,12 +746,13 @@ class GymTracker {
         this.renderWorkoutExercises();
         document.getElementById('workout-modal').classList.add('active');
     }
+
+	// ✅ IMPROVED: Better workout exercise rendering with fixed layout
 	renderWorkoutExercises() {
 		const container = document.getElementById('workout-exercises');
 		container.innerHTML = '';
 
 		this.currentWorkout.exercises.forEach((exercise, exIndex) => {
-			// Unit label
 			const unitLabel = exercise.unit === 'lb' ? 'lb'
 							: exercise.unit === 'minute' ? 'Min'
 							: exercise.unit === 'second' ? 'Sec'
@@ -794,8 +762,8 @@ class GymTracker {
 							: 'Reps';
 
 			let noteHtml = '';
-			if (exercise.note) noteHtml += `<div class="exercise-note" style="color:var(--primary);font-size:0.93em;margin:8px 0;">📝 ${exercise.note}</div>`;
-			if (exercise.stickyNote) noteHtml += `<div class="exercise-sticky-note" style="color:#FFEB3B;font-weight:bold;">📌 ${exercise.stickyNote}</div>`;
+			if (exercise.note) noteHtml += `<div class="exercise-note">📝 ${exercise.note}</div>`;
+			if (exercise.stickyNote) noteHtml += `<div class="exercise-sticky-note">📌 ${exercise.stickyNote}</div>`;
 
 			let setsHtml = `
 				<div class="set-row set-row-header">
@@ -808,7 +776,6 @@ class GymTracker {
 			`;
 
 			exercise.sets.forEach((set, setIndex) => {
-				// Nếu muốn hiện previous, cần truyền dữ liệu cho set.previous nhé!
 				const warmupIcon = set.isWarmup ? '<span title="Warm-up set" style="color:#29b6f6;font-size:1.1em;">🔥</span>' : '';
 				setsHtml += `
 					<div class="set-block${set.completed ? ' set-completed' : ''}">
@@ -852,7 +819,6 @@ class GymTracker {
 				`;
 			});
 
-			// Rest sau set cuối + nút Add Set
 			setsHtml += `
 				<div class="rest-bar-wrap">
 					<div class="rest-bar"
@@ -865,17 +831,24 @@ class GymTracker {
 						<div class="rest-progress-bar" id="rest-progress-last-${exIndex}"></div>
 					</div>
 				</div>
-				<div class="add-set-row" style="text-align:right; margin-top:6px;">
+				<div class="add-set-row">
 					<button class="btn btn-primary btn-sm" onclick="app.addSet(${exIndex})">+ Add Set</button>
 				</div>
 			`;
 
+			// ✅ IMPROVED: Better exercise header layout
 			container.innerHTML += `
-						<div class="workout-exercise-header">
-						  <span class="workout-exercise-name">${exercise.name}</span>
-						  <div class="exercise-actions">
+				<div class="workout-exercise">
+					<div class="workout-exercise-header">
+						<div class="exercise-title-section">
+							<span class="workout-exercise-name">${exercise.name}</span>
+							<div class="exercise-meta">
+								<span class="exercise-muscle">${this.getMuscleName(exercise.muscle)}</span>
+							</div>
+						</div>
+						<div class="exercise-actions">
 							<button class="btn-ex-action" onclick="app.toggleEditMenu(event, ${exIndex})">
-							  <span class="menu-icon">⋯</span>
+								<span class="menu-icon">⋯</span>
 							</button>
 							<div class="exercise-menu" id="edit-menu-${exIndex}" style="display:none;">
 								<button onclick="app.addExerciseNote(${exIndex})">📝 Add Note</button>
@@ -887,8 +860,8 @@ class GymTracker {
 								<button onclick="app.exercisePreferences(${exIndex}, event)">⚙️ Preferences</button>
 								<button class="danger" onclick="app.removeExercise(${exIndex})">❌ Remove</button>
 							</div>
-						  </div>
 						</div>
+					</div>
 					${noteHtml}
 					<div class="sets-table">
 						${setsHtml}
@@ -903,13 +876,10 @@ class GymTracker {
 			modal.classList.remove('active');
 		});
 	}
-
 	
-	// Nhấn vào rest-bar để chỉnh thời gian nghỉ
 	editSetRestTime(exIndex, setIndex) {
 		const timerSpan = document.getElementById(`rest-timer-${exIndex}-${setIndex}`);
 		let current = timerSpan.textContent.trim();
-		// Tạo input thay thế
 		timerSpan.outerHTML = `<input type="text" id="rest-timer-input-${exIndex}-${setIndex}" class="set-rest-time" value="${current}" style="width:56px;text-align:center;color:#00bfff;">`;
 		const input = document.getElementById(`rest-timer-input-${exIndex}-${setIndex}`);
 		input.focus();
@@ -939,34 +909,29 @@ class GymTracker {
 
 		timerSpan.textContent = this.formatTime(timeLeft);
 
-		// Đặt lại bar về 100% trước khi animate
 		progressBar.style.transition = 'none';
 		progressBar.style.width = '100%';
 
-
-		// Dọn timer cũ nếu có
 		if (!this.setRestIntervals) this.setRestIntervals = {};
 		Object.values(this.setRestIntervals).forEach(clearInterval);
 		if (this.setRestIntervals[`${exIndex}-${setIndex}`]) {
 			clearInterval(this.setRestIntervals[`${exIndex}-${setIndex}`]);
 		}
 
-		// Bắt đầu animation width 100% => 0%
 		setTimeout(() => {
 			progressBar.style.transition = `width ${totalTime}s linear`;
 			progressBar.style.width = '0%';
 		}, 50);
 
-		// Bắt đầu countdown
 		this.setRestIntervals[`${exIndex}-${setIndex}`] = setInterval(() => {
 			timeLeft--;
 			timerSpan.textContent = this.formatTime(timeLeft);
-			if (timeLeft > 0 && timeLeft <= 10) playBeep(); // beep 3s cuối
+			if (timeLeft > 0 && timeLeft <= 10) playBeep();
 			if (timeLeft <= 0) {
 				clearInterval(this.setRestIntervals[`${exIndex}-${setIndex}`]);
 				timerSpan.textContent = "Done";
 				progressBar.style.width = '0%';
-				playDone(); // ding khi hết giờ
+				playDone();
 			}
 		}, 1000);
 	}
@@ -976,20 +941,7 @@ class GymTracker {
 		const s = (seconds % 60).toString().padStart(2, "0");
 		return `${m}:${s}`;
 	}
-	markExerciseComplete(exIndex) {
-		const container = document.getElementById(`exercise-rest-${exIndex}`);
-		let seconds = 60;
-		const interval = setInterval(() => {
-			const m = String(Math.floor(seconds / 60)).padStart(2, '0');
-			const s = String(seconds % 60).padStart(2, '0');
-			container.textContent = `Rest: ${m}:${s}`;
-			seconds--;
-			if (seconds < 0) {
-				clearInterval(interval);
-				container.textContent = "Done";
-			}
-		}, 1000);
-	}
+
 	runRestAfterLastSetTimer(exIndex) {
 		let restTime = this.currentWorkout.exercises[exIndex].restAfterLastSet || "1:00";
 		let [min, sec] = restTime.split(":").map(Number);
@@ -1006,7 +958,6 @@ class GymTracker {
 		progressBar.style.width = '100%';
 
 		if (!this.setRestIntervals) this.setRestIntervals = {};
-		Object.values(this.setRestIntervals).forEach(clearInterval);
 		if (this.setRestIntervals[`last-${exIndex}`]) {
 			clearInterval(this.setRestIntervals[`last-${exIndex}`]);
 		}
@@ -1016,36 +967,26 @@ class GymTracker {
 			progressBar.style.width = '0%';
 		}, 50);
 
-		this.setRestIntervals[`${exIndex}-${setIndex}`] = setInterval(() => {
+		this.setRestIntervals[`last-${exIndex}`] = setInterval(() => {
 			timeLeft--;
 			timerSpan.textContent = this.formatTime(timeLeft);
-			if (timeLeft > 0 && timeLeft <= 10) playBeep(); // beep 3s cuối
+			if (timeLeft > 0 && timeLeft <= 10) playBeep();
 			if (timeLeft <= 0) {
-				clearInterval(this.setRestIntervals[`${exIndex}-${setIndex}`]);
+				clearInterval(this.setRestIntervals[`last-${exIndex}`]);
 				timerSpan.textContent = "Done";
 				progressBar.style.width = '0%';
-				playDone(); // ding khi hết giờ
+				playDone();
 			}
 		}, 1000);
 	}
-	skipSetRest(exIndex, setIndex) {
-		// Ví dụ: Bỏ qua luôn timer, set time về 0
-		document.getElementById(`rest-timer-${exIndex}-${setIndex}`).textContent = '00:00';
-	}
 
-	addSetRestTime(exIndex, setIndex, seconds) {
-		// Ví dụ: Tăng thêm giây vào timer của set này
-		// Bạn cần lưu biến time cho từng set, có thể gán vào exercise.sets nếu muốn.
-	}
     updateSet(exIndex, setIndex, field, value) {
         this.currentWorkout.exercises[exIndex].sets[setIndex][field] = parseFloat(value) || 0;
+		// Auto-save after each change
+		this.saveData('currentWorkout', this.currentWorkout);
     }
-	updateSetRestTime(exIndex, setIndex, value) {
-		// Cập nhật lại thời gian nghỉ cho từng set
-		this.currentWorkout.exercises[exIndex].sets[setIndex].restTime = value;
-	}
+
 	addSet(exIndex) {
-		// Thêm 1 set mới vào exercise
 		this.currentWorkout.exercises[exIndex].sets.push({
 			weight: 0,
 			reps: 0,
@@ -1054,6 +995,7 @@ class GymTracker {
 		});
 		this.renderWorkoutExercises();
 	}	
+
 	editRestAfterLastSet(exIndex) {
 		const timerSpan = document.getElementById(`rest-timer-last-${exIndex}`);
 		let current = timerSpan.textContent.trim();
@@ -1077,18 +1019,15 @@ class GymTracker {
 		const set = sets[setIndex];
 		set.completed = !set.completed;
 
-		// Render xong rồi mới gọi timer, tránh lỗi DOM chưa có node mới
 		this.renderWorkoutExercises();
 
 		setTimeout(() => {
 			if (set.completed) {
-				// Nếu là set cuối cùng -> chạy rest-bar cuối
 				if (setIndex === sets.length - 1) {
 					this.runRestAfterLastSetTimer(exIndex);
 					const restBar = document.getElementById(`rest-bar-last-${exIndex}`);
 					if (restBar) restBar.scrollIntoView({ behavior: 'smooth', block: 'center' });
 				} else {
-					// Nếu là set giữa -> chạy bar tiếp theo
 					if (!this.setRestIntervals) this.setRestIntervals = {};
 					Object.values(this.setRestIntervals).forEach(clearInterval);
 					this.setRestIntervals = {};
@@ -1101,41 +1040,15 @@ class GymTracker {
 		}, 0);
 	}
 	
-	toggleExerciseMenu(e, exIndex) {
-		e.stopPropagation();
-		// Đóng tất cả menu khác trước
-		document.querySelectorAll('.exercise-menu').forEach(menu => menu.style.display = 'none');
-		// Toggle menu hiện tại
-		const menu = document.getElementById(`exercise-menu-${exIndex}`);
-		if (menu) menu.style.display = (menu.style.display === 'block' ? 'none' : 'block');
-		// Click ngoài thì ẩn menu
-		document.addEventListener('click', function handler(ev) {
-			if (!menu.contains(ev.target)) {
-				menu.style.display = 'none';
-				document.removeEventListener('click', handler);
-			}
-		});
-		document.addEventListener('click', function (e) {
-			document.querySelectorAll('.exercise-menu').forEach(menu => {
-				// Nếu click ra ngoài menu và ngoài nút ba chấm, thì ẩn menu
-				if (!menu.contains(e.target) && !e.target.classList.contains('btn-ex-action') && !e.target.classList.contains('menu-icon')) {
-					menu.style.display = 'none';
-				}
-			});
-		});
-	}
 	toggleEditMenu(e, exIndex) {
 		e.stopPropagation();
-		// Đóng tất cả menu khác trước
 		document.querySelectorAll('.exercise-menu').forEach(menu => menu.style.display = 'none');
-		// Toggle menu hiện tại
 		const menu = document.getElementById(`edit-menu-${exIndex}`);
 		if (menu) {
 			if (menu.style.display === 'block') {
 				menu.style.display = 'none';
 			} else {
 				menu.style.display = 'block';
-				// Chỉ đóng khi click ngoài menu
 				setTimeout(() => {
 					function hideMenu(ev) {
 						if (!menu.contains(ev.target) && ev.target !== e.target) {
@@ -1149,79 +1062,6 @@ class GymTracker {
 		}
 	}
 
-
-	editTemplateExercise(exIndex) {
-		// Ví dụ: chỉnh số set, mục tiêu rep,...
-		const ex = this.selectedExercises[exIndex];
-		const sets = prompt("Số set (vd: 3):", ex.sets.length);
-		if (sets && !isNaN(sets) && sets > 0) {
-			// Giữ giá trị rep cũ nếu có, nếu tăng thì thêm, giảm thì cắt
-			while (ex.sets.length < sets) ex.sets.push({ targetReps: '8-12', restTime: '1:00' });
-			while (ex.sets.length > sets) ex.sets.pop();
-			this.renderSelectedExercises();
-			this.showToast("Đã cập nhật số set.");
-		}
-	}
-	addNoteToTemplateExercise(exIndex) {
-		const ex = this.selectedExercises[exIndex];
-		const note = prompt("Ghi chú cho bài này:", ex.note || "");
-		if (note !== null) {
-			ex.note = note.trim();
-			this.renderSelectedExercises();
-			this.showToast("Đã lưu ghi chú.");
-		}
-	}
-	handleImportFile(event) {
-		const file = event.target.files[0];
-		if (!file) {
-			this.showToast('Không có file nào được chọn.', 'warning');
-			return;
-		}
-		const reader = new FileReader();
-		reader.onload = (e) => {
-			try {
-				const data = JSON.parse(e.target.result);
-
-				// Bạn nên kiểm tra dữ liệu hợp lệ (có thể tuỳ biến tuỳ file export)
-				if (!data.workoutHistory || !Array.isArray(data.workoutHistory)) {
-					this.showToast('File không hợp lệ (thiếu workoutHistory)', 'error');
-					return;
-				}
-
-				// Import dữ liệu (thay thế hoặc merge, ở đây là thay thế hoàn toàn)
-				this.workoutHistory = data.workoutHistory;
-				this.saveData('workoutHistory', this.workoutHistory);
-
-				// Nếu có import template, exercise thì cũng xử lý tương tự
-				if (data.templates) {
-					this.templates = data.templates;
-					this.saveData('templates', this.templates);
-				}
-				if (data.exercises) {
-					this.exercises = data.exercises;
-					this.saveData('exercises', this.exercises);
-				}
-
-				this.showToast('Đã import dữ liệu thành công!', 'success');
-
-				// Render lại UI nếu đang ở trang history
-				if (this.currentPage === 'history') this.renderHistory();
-
-			} catch (err) {
-				this.showToast('File không hợp lệ hoặc bị lỗi!', 'error');
-			}
-		};
-		reader.readAsText(file);
-	}
-
-
-	// Placeholder cho các chức năng
-	removeExercise(exIndex) {
-		if (confirm("Remove exercise này?")) {
-			this.currentWorkout.exercises.splice(exIndex, 1);
-			this.renderWorkoutExercises();
-		}
-	}
 	addExerciseNote(exIndex) {
 		const ex = this.currentWorkout.exercises[exIndex];
 		const note = prompt("Ghi chú cho bài này:", ex.note || "");
@@ -1231,6 +1071,7 @@ class GymTracker {
 			this.showToast("Đã lưu ghi chú.");
 		}
 	}
+
 	addExerciseSticky(exIndex) {
 		const ex = this.currentWorkout.exercises[exIndex];
 		const sticky = prompt("Sticky note (ghi chú nổi bật):", ex.stickyNote || "");
@@ -1240,6 +1081,7 @@ class GymTracker {
 			this.showToast("Đã lưu sticky note.");
 		}
 	}
+
 	addWarmupSet(exIndex) {
 		const ex = this.currentWorkout.exercises[exIndex];
 		const reps = prompt("Số reps cho warm-up set (vd: 10):", "10");
@@ -1256,41 +1098,34 @@ class GymTracker {
 			this.showToast("Đã thêm warm-up set.");
 		}
 	}
-
 	
 	updateRestTimers(exIndex) {
 		const ex = this.currentWorkout.exercises[exIndex];
 		const rest = prompt("Nhập thời gian nghỉ mới (định dạng mm:ss, vd: 1:30):", "1:00");
 		if (rest && /^\d{1,2}:\d{2}$/.test(rest)) {
 			ex.sets.forEach(set => set.restTime = rest);
-			ex.restAfterLastSet = rest; // đồng bộ cả bar cuối nếu muốn
+			ex.restAfterLastSet = rest;
 			this.renderWorkoutExercises();
 			this.showToast("Đã cập nhật thời gian nghỉ.");
 		} else {
 			this.showToast("Định dạng thời gian không hợp lệ.", "warning");
 		}
 	}
+
 	replaceExercise(exIndex) {
-		// Giả sử bạn có 1 hàm mở modal chọn bài tập (exercise picker)
 		this.showExercisePicker((newExercise) => {
-			// newExercise là object bài tập chọn mới
-			// Có thể giữ số set cũ hoặc reset lại tuỳ logic
 			this.currentWorkout.exercises[exIndex].name = newExercise.name;
 			this.currentWorkout.exercises[exIndex].muscle = newExercise.muscle;
-			// ... copy thuộc tính khác nếu cần
 			this.renderWorkoutExercises();
 			this.showToast("Đã thay thế bài tập.");
 		});
 	}
 
-	// Mockup cho showExercisePicker (tuỳ bạn làm modal hay popup):
 	showExercisePicker(callback) {
-		// Dùng modal riêng cho replace hoặc tái sử dụng modal chọn bài tập (nên làm riêng nếu flow khác nhau)
 		const modal = document.getElementById('exercise-picker-modal');
 		const list = document.getElementById('exercise-picker-list');
 		let selectedId = null;
 
-		// Render danh sách bài tập
 		list.innerHTML = this.exercises.map(ex => `
 			<div class="exercise-select-item" 
 				 onclick="app.selectReplaceExercise('${ex.id}', this)" 
@@ -1303,14 +1138,12 @@ class GymTracker {
 			</div>
 		`).join('');
 
-		// Chức năng chọn 1 bài duy nhất
 		window.app.selectReplaceExercise = function(id, el) {
 			document.querySelectorAll('#exercise-picker-list .exercise-select-item').forEach(item => item.classList.remove('selected'));
 			el.classList.add('selected');
 			selectedId = id;
 		};
 
-		// Xác nhận chọn
 		document.getElementById('confirm-ex-picker-btn').onclick = () => {
 			if (!selectedId) {
 				app.showToast("Vui lòng chọn 1 bài tập để thay thế!", "warning");
@@ -1321,26 +1154,24 @@ class GymTracker {
 			modal.classList.remove('active');
 		};
 
-		// Mở modal
 		modal.classList.add('active');
 	}
+
 	closeExercisePicker() {
 		document.getElementById('exercise-picker-modal').classList.remove('active');
 	}
 
 	createSuperset(exIndex) {
-		// Giả sử bạn show popup chọn bài tập khác
 		this.showExercisePicker((otherExercise) => {
-			// Đánh dấu 2 bài này thuộc cùng superset (ví dụ supersetId = random id)
 			const supersetId = Date.now() + '-' + Math.random().toString(36).substr(2,5);
 			this.currentWorkout.exercises[exIndex].supersetId = supersetId;
-			// tìm index bài vừa chọn, đánh dấu supersetId giống
 			const otherIdx = this.currentWorkout.exercises.findIndex(ex => ex.id === otherExercise.id);
 			if (otherIdx > -1) this.currentWorkout.exercises[otherIdx].supersetId = supersetId;
 			this.renderWorkoutExercises();
 			this.showToast("Đã tạo superset.");
 		});
 	}
+
 	exercisePreferences(exIndex, event) {
 		const ex = this.currentWorkout.exercises[exIndex];
 		let unitOptions = ['kg', 'lb'];
@@ -1349,19 +1180,16 @@ class GymTracker {
 		}
 		const currentUnit = ex.unit || unitOptions[0];
 
-		// Render menu
 		const menu = document.getElementById('unit-context-menu');
 		menu.innerHTML = unitOptions.map(u =>
 			`<button class="context-menu-btn${u===currentUnit?' selected':''}" data-unit="${u}">${u.toUpperCase()}</button>`
 		).join('');
 
-		// Hiện menu tại vị trí nút hoặc chuột
 		let x = event ? event.clientX : window.innerWidth/2, y = event ? event.clientY : window.innerHeight/2;
 		menu.style.left = x + 'px';
 		menu.style.top = y + 'px';
 		menu.style.display = 'flex';
 
-		// Chọn đơn vị
 		menu.querySelectorAll('.context-menu-btn').forEach(btn => {
 			btn.onclick = (e2) => {
 				const newUnit = btn.getAttribute('data-unit');
@@ -1381,7 +1209,6 @@ class GymTracker {
 			}
 		});
 
-		// Đóng menu khi click ngoài
 		setTimeout(() => {
 			document.addEventListener('click', hideMenu, { once: true });
 		});
@@ -1389,7 +1216,6 @@ class GymTracker {
 			if (!menu.contains(e2.target)) menu.style.display = 'none';
 		}
 	}
-
 	
 	removeExercise(exIndex) {
 		if (confirm("Bạn chắc chắn muốn xoá bài tập này khỏi buổi tập?")) {
@@ -1398,7 +1224,6 @@ class GymTracker {
 			this.showToast("Đã xoá bài tập.", "success");
 		}
 	}
-
 
 	startWorkoutTimer() {
 		if (this.workoutTimer) clearInterval(this.workoutTimer);
@@ -1436,7 +1261,6 @@ class GymTracker {
 		this.workoutHistory.push(workout);
 		this.saveData('workoutHistory', this.workoutHistory);
 
-		// Xóa workout dở dang
 		this.saveData('currentWorkout', null);
 		this.currentWorkout = null;
 
@@ -1444,18 +1268,13 @@ class GymTracker {
 		this.showToast('Workout đã được lưu! 💪', 'success');
 		this.updateStats();
 
-		// **THÊM DÒNG SAU ĐỂ CẬP NHẬT UI**
-		// ✅ BẰNG dòng đơn giản này:
 		this.loadPage(this.currentPage);
 		document.getElementById('resume-workout-banner')?.remove();
 	}
-	
-
     
 	closeWorkout() {
 		clearInterval(this.workoutTimer);
 		
-		// ✅ THÊM đoạn này:
 		if (this.setRestIntervals) {
 			Object.values(this.setRestIntervals).forEach(clearInterval);
 			this.setRestIntervals = {};
@@ -1482,9 +1301,7 @@ class GymTracker {
 	  document.getElementById('workout-detail-content').innerHTML = html;
 	  document.getElementById('workout-detail-modal').classList.add('active');
 	}
-
     
-    // ===== Template Management =====
     createTemplate() {
         this.currentTemplate = null;
         this.selectedExercises = [];
@@ -1536,11 +1353,9 @@ class GymTracker {
         };
         
         if (this.currentTemplate) {
-            // Update existing
             const index = this.templates.findIndex(t => t.id === template.id);
             this.templates[index] = template;
         } else {
-            // Create new
             this.templates.unshift(template);
         }
         
@@ -1564,7 +1379,6 @@ class GymTracker {
 		this.renderExerciseSelection();
 		document.getElementById('exercise-select-modal').classList.add('active');
 	}
-
     
     renderExerciseSelection() {
         const container = document.getElementById('exercise-select-list');
@@ -1660,6 +1474,7 @@ class GymTracker {
         document.getElementById('exercise-select-modal').classList.remove('active');
     }
     
+	// ✅ IMPROVED: Better template editor with move buttons outside
 	renderSelectedExercises() {
 		const container = document.getElementById('selected-exercises');
 		if (this.selectedExercises.length === 0) {
@@ -1667,7 +1482,6 @@ class GymTracker {
 			return;
 		}
 		container.innerHTML = this.selectedExercises.map((exercise, exIndex) => {
-			// Xác định đơn vị
 			const unitLabel = exercise.unit === 'lb' ? 'lb'
 							: exercise.unit === 'minute' ? 'Min'
 							: exercise.unit === 'second' ? 'Sec'
@@ -1676,12 +1490,10 @@ class GymTracker {
 							: exercise.unit === 'second' ? 'Second'
 							: 'Reps';
 
-			// Note và sticky note
 			let noteHtml = '';
-			if (exercise.note) noteHtml += `<div class="exercise-note" style="color:var(--primary);font-size:0.93em;margin:7px 0 3px 0;">📝 ${exercise.note}</div>`;
-			if (exercise.stickyNote) noteHtml += `<div class="exercise-sticky-note" style="color:#FFEB3B;font-weight:bold;margin:0 0 5px 0;">📌 ${exercise.stickyNote}</div>`;
+			if (exercise.note) noteHtml += `<div class="exercise-note">📝 ${exercise.note}</div>`;
+			if (exercise.stickyNote) noteHtml += `<div class="exercise-sticky-note">📌 ${exercise.stickyNote}</div>`;
 
-			// Table sets
 			let setsHtml = `
 				<div class="set-row set-row-header">
 					<div class="set-number">Set</div>
@@ -1717,38 +1529,51 @@ class GymTracker {
 							<button class="btn-ex-action" style="font-size:1.2em"
 								onclick="app.removeTemplateSet(${exIndex},${setIndex})" title="Xóa set">×</button>
 						</div>
-						<div class="exercise-move">
-							<button onclick="app.moveExerciseUp(${exIndex})" ${exIndex === 0 ? 'disabled' : ''}>⬆️</button>
-							<button onclick="app.moveExerciseDown(${exIndex})" ${exIndex === this.selectedExercises.length - 1 ? 'disabled' : ''}>⬇️</button>
-						</div>
 					</div>
 				`;
 			});
 
 			setsHtml += `
-				<div class="add-set-row" style="text-align:right; margin-top:6px;">
+				<div class="add-set-row">
 					<button class="btn btn-primary btn-sm" onclick="app.addTemplateSet(${exIndex})">+ Add Set</button>
 				</div>
 			`;
 
-			// Giao diện bài tập (header fix chuẩn)
+			// ✅ IMPROVED: Move buttons outside in separate section
 			return `
-			<div class="workout-exercise" style="background:var(--bg-tertiary);border-radius:14px;margin-bottom:18px;">
-				<div class="workout-exercise-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-					<span class="workout-exercise-name" style="font-size:1.13em;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px;display:inline-block;">${exercise.name}</span>
-					<div class="exercise-actions" style="display:flex;align-items:center;position:relative;">
-						<button class="btn-ex-action" onclick="app.toggleEditMenu(event, ${exIndex})" title="Tùy chọn">
-							<span class="menu-icon">⋯</span>
-						</button>
-						<div class="exercise-menu" id="edit-menu-${exIndex}" style="display:none;z-index:1051;right:0;top:36px;position:absolute;">
-							<button onclick="app.addNoteToTemplateExercise(${exIndex})">📝 Ghi chú</button>
-							<button onclick="app.addStickyToTemplateExercise(${exIndex})">📌 Sticky Note</button>
-							<button onclick="app.addWarmupSetToTemplate(${exIndex})">➕ Thêm Warm-up Set</button>
-							<button onclick="app.updateRestTimersTemplate(${exIndex})">⏱️ Update Rest Timers</button>
-							<button onclick="app.replaceExerciseInTemplate(${exIndex})">🔄 Replace Exercise</button>
-							<button onclick="app.createSupersetInTemplate(${exIndex})">⎯⎯ Create Superset</button>
-							<button onclick="app.exercisePreferencesTemplate(${exIndex}, event)">⚙️ Preferences</button>
-							<button class="danger" onclick="app.removeSelectedExercise(${exIndex})">❌ Xóa bài</button>
+			<div class="workout-exercise template-exercise">
+				<div class="template-exercise-header">
+					<div class="exercise-title-section">
+						<span class="workout-exercise-name">${exercise.name}</span>
+						<div class="exercise-meta">
+							<span class="exercise-muscle">${this.getMuscleName(exercise.muscle)}</span>
+						</div>
+					</div>
+					<div class="exercise-controls">
+						<div class="move-controls">
+							<button class="btn-move" onclick="app.moveExerciseUp(${exIndex})" 
+								${exIndex === 0 ? 'disabled' : ''} title="Move Up">
+								<span>⬆️</span>
+							</button>
+							<button class="btn-move" onclick="app.moveExerciseDown(${exIndex})" 
+								${exIndex === this.selectedExercises.length - 1 ? 'disabled' : ''} title="Move Down">
+								<span>⬇️</span>
+							</button>
+						</div>
+						<div class="exercise-actions">
+							<button class="btn-ex-action" onclick="app.toggleEditMenu(event, ${exIndex})" title="Options">
+								<span class="menu-icon">⋯</span>
+							</button>
+							<div class="exercise-menu" id="edit-menu-${exIndex}" style="display:none;">
+								<button onclick="app.addNoteToTemplateExercise(${exIndex})">📝 Ghi chú</button>
+								<button onclick="app.addStickyToTemplateExercise(${exIndex})">📌 Sticky Note</button>
+								<button onclick="app.addWarmupSetToTemplate(${exIndex})">➕ Thêm Warm-up Set</button>
+								<button onclick="app.updateRestTimersTemplate(${exIndex})">⏱️ Update Rest Timers</button>
+								<button onclick="app.replaceExerciseInTemplate(${exIndex})">🔄 Replace Exercise</button>
+								<button onclick="app.createSupersetInTemplate(${exIndex})">⎯⎯ Create Superset</button>
+								<button onclick="app.exercisePreferencesTemplate(${exIndex}, event)">⚙️ Preferences</button>
+								<button class="danger" onclick="app.removeSelectedExercise(${exIndex})">❌ Xóa bài</button>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -1759,15 +1584,14 @@ class GymTracker {
 		}).join('');
 	}
 
-
 	updateTemplateSetField(exIndex, setIndex, field, value) {
-		// Nếu là targetWeight, ép về số
 		if (field === 'targetWeight') {
 			this.selectedExercises[exIndex].sets[setIndex][field] = value ? parseFloat(value) : '';
 		} else {
 			this.selectedExercises[exIndex].sets[setIndex][field] = value;
 		}
 	}
+
 	addTemplateSet(exIndex) {
 		this.selectedExercises[exIndex].sets.push({
 			targetWeight: '',
@@ -1776,14 +1600,11 @@ class GymTracker {
 		});
 		this.renderSelectedExercises();
 	}
+
 	removeTemplateSet(exIndex, setIndex) {
 		this.selectedExercises[exIndex].sets.splice(setIndex, 1);
 		this.renderSelectedExercises();
 	}
-
-    updateTemplateSet(exIndex, setIndex, value) {
-        this.selectedExercises[exIndex].sets[setIndex].targetReps = value;
-    }
     
     removeSelectedExercise(index) {
         this.selectedExercises.splice(index, 1);
@@ -1799,6 +1620,7 @@ class GymTracker {
 			this.showToast("Đã lưu ghi chú.");
 		}
 	}
+
 	addStickyToTemplateExercise(exIndex) {
 		const ex = this.selectedExercises[exIndex];
 		const sticky = prompt("Sticky note (ghi chú nổi bật):", ex.stickyNote || "");
@@ -1808,6 +1630,7 @@ class GymTracker {
 			this.showToast("Đã lưu sticky note.");
 		}
 	}
+
 	addWarmupSetToTemplate(exIndex) {
 		const ex = this.selectedExercises[exIndex];
 		const reps = prompt("Số reps cho warm-up set (vd: 10):", "10");
@@ -1822,6 +1645,7 @@ class GymTracker {
 			this.showToast("Đã thêm warm-up set.");
 		}
 	}
+
 	updateRestTimersTemplate(exIndex) {
 		const ex = this.selectedExercises[exIndex];
 		const rest = prompt("Nhập thời gian nghỉ mới (mm:ss, vd: 1:30):", "1:00");
@@ -1833,16 +1657,16 @@ class GymTracker {
 			this.showToast("Định dạng thời gian không hợp lệ.", "warning");
 		}
 	}
+
 	replaceExerciseInTemplate(exIndex) {
-		// Gọi popup chọn bài tập mới, update name/muscle, giữ lại các set nếu muốn
 		this.showExercisePicker((newExercise) => {
 			this.selectedExercises[exIndex].name = newExercise.name;
 			this.selectedExercises[exIndex].muscle = newExercise.muscle;
-			// có thể update unit, sets...
 			this.renderSelectedExercises();
 			this.showToast("Đã thay thế bài tập.");
 		});
 	}
+
 	moveExerciseUp(exIndex) {
 		if (exIndex <= 0) return;
 		const tmp = this.selectedExercises[exIndex];
@@ -1850,6 +1674,7 @@ class GymTracker {
 		this.selectedExercises[exIndex - 1] = tmp;
 		this.renderSelectedExercises();
 	}
+
 	moveExerciseDown(exIndex) {
 		if (exIndex >= this.selectedExercises.length - 1) return;
 		const tmp = this.selectedExercises[exIndex];
@@ -1868,8 +1693,8 @@ class GymTracker {
 			this.showToast("Đã tạo superset.");
 		});
 	}
+
 	exercisePreferencesTemplate(exIndex, event) {
-		// Tùy chỉnh giống workout
 		const ex = this.selectedExercises[exIndex];
 		let unitOptions = ['kg', 'lb'];
 		if (ex.type === 'cardio' || /plank|run|minute/i.test(ex.name)) {
@@ -1899,39 +1724,7 @@ class GymTracker {
 			if (!menu.contains(e2.target)) menu.style.display = 'none';
 		}
 	}
-    // ===== Rest Timer =====
-    startRestTimer(seconds = 120) {
-        const restTimerEl = document.getElementById('rest-timer');
-        const restTimeEl = document.getElementById('rest-time');
-        
-        restTimerEl.classList.add('active');
-        
-        let timeLeft = seconds;
-        
-		this.setRestIntervals[`${exIndex}-${setIndex}`] = setInterval(() => {
-			timeLeft--;
-			timerSpan.textContent = this.formatTime(timeLeft);
-			if (timeLeft > 0 && timeLeft <= 10) playBeep(); // beep 3s cuối
-			if (timeLeft <= 0) {
-				clearInterval(this.setRestIntervals[`${exIndex}-${setIndex}`]);
-				timerSpan.textContent = "Done";
-				progressBar.style.width = '0%';
-				playDone(); // ding khi hết giờ
-			}
-		}, 1000);
-    }
     
-    skipRest() {
-        clearInterval(this.restTimer);
-        document.getElementById('rest-timer').classList.remove('active');
-    }
-    
-    addRestTime(seconds) {
-        // TODO: Implement add time to rest timer
-        this.showToast(`+${seconds}s`, 'info');
-    }
-    
-    // ===== Data Management =====
     exportData() {
         const data = {
             templates: this.templates,
@@ -1952,8 +1745,46 @@ class GymTracker {
         
         this.showToast('Dữ liệu đã được xuất!', 'success');
     }
+
+	handleImportFile(event) {
+		const file = event.target.files[0];
+		if (!file) {
+			this.showToast('Không có file nào được chọn.', 'warning');
+			return;
+		}
+		const reader = new FileReader();
+		reader.onload = (e) => {
+			try {
+				const data = JSON.parse(e.target.result);
+
+				if (!data.workoutHistory || !Array.isArray(data.workoutHistory)) {
+					this.showToast('File không hợp lệ (thiếu workoutHistory)', 'error');
+					return;
+				}
+
+				this.workoutHistory = data.workoutHistory;
+				this.saveData('workoutHistory', this.workoutHistory);
+
+				if (data.templates) {
+					this.templates = data.templates;
+					this.saveData('templates', this.templates);
+				}
+				if (data.exercises) {
+					this.exercises = data.exercises;
+					this.saveData('exercises', this.exercises);
+				}
+
+				this.showToast('Đã import dữ liệu thành công!', 'success');
+
+				if (this.currentPage === 'history') this.renderHistory();
+
+			} catch (err) {
+				this.showToast('File không hợp lệ hoặc bị lỗi!', 'error');
+			}
+		};
+		reader.readAsText(file);
+	}
     
-    // ===== Utilities =====
     generateId() {
         return Date.now().toString(36) + Math.random().toString(36).substr(2);
     }
@@ -2070,14 +1901,7 @@ class GymTracker {
         };
         return names[muscle] || muscle;
     }
-previewWorkout(exerciseId) {
-    this.showToast("Xem trước bài tập đơn chưa được triển khai", "info");
-}
 
-editExercise(exerciseId) {
-    this.showToast("Chức năng sửa bài tập đang phát triển", "info");
-}
-    // ===== Default Data =====
 	getDefaultExercises() {
 		return [
 			// Chest
@@ -2127,9 +1951,8 @@ editExercise(exerciseId) {
 		];
 	}
 }
-// Additional features and improvements for Gym Tracker
 
-// ===== 1. Auto-save workout progress =====
+// Additional classes remain the same...
 class AutoSaveManager {
     constructor(gymTracker) {
         this.app = gymTracker;
@@ -2138,7 +1961,6 @@ class AutoSaveManager {
     }
     
     startAutoSave() {
-        // Auto-save every 30 seconds
         this.saveInterval = setInterval(() => {
             if (this.app.currentWorkout && !this.app.currentWorkout.endTime) {
                 this.app.saveData('currentWorkout', this.app.currentWorkout);
@@ -2155,7 +1977,6 @@ class AutoSaveManager {
     }
 }
 
-// ===== 2. Exercise History Tracking =====
 class ExerciseHistoryTracker {
     constructor(gymTracker) {
         this.app = gymTracker;
@@ -2208,15 +2029,14 @@ class ExerciseHistoryTracker {
     }
 }
 
-// ===== 3. Smart Rest Timer =====
 class SmartRestTimer {
     constructor() {
         this.restTimes = {
             strength: {
-                light: '1:00',      // < 60% 1RM
-                moderate: '2:00',   // 60-80% 1RM
-                heavy: '3:00',      // 80-90% 1RM
-                maximal: '5:00'     // > 90% 1RM
+                light: '1:00',
+                moderate: '2:00',
+                heavy: '3:00',
+                maximal: '5:00'
             },
             hypertrophy: {
                 compound: '2:00',
@@ -2229,7 +2049,6 @@ class SmartRestTimer {
     }
     
     suggestRestTime(exercise, set, previousSet) {
-        // Calculate intensity based on previous set
         if (!previousSet || !previousSet.weight) {
             return this.restTimes.hypertrophy.compound;
         }
@@ -2246,7 +2065,6 @@ class SmartRestTimer {
     }
 }
 
-// ===== 4. Workout Analytics =====
 class WorkoutAnalytics {
     constructor(gymTracker) {
         this.app = gymTracker;
@@ -2338,7 +2156,6 @@ class WorkoutAnalytics {
     }
 }
 
-// ===== 5. Superset Support =====
 class SupersetManager {
     createSuperset(exercises) {
         const supersetId = this.generateSupersetId();
@@ -2360,10 +2177,8 @@ class SupersetManager {
         
         return Object.entries(supersets).map(([supersetId, exercises]) => {
             if (supersetId === 'null') {
-                // Regular exercises
                 return exercises.map(ex => this.renderRegularExercise(ex)).join('');
             } else {
-                // Superset group
                 return this.renderSupersetGroup(exercises);
             }
         }).join('');
@@ -2391,12 +2206,10 @@ class SupersetManager {
     }
     
     renderRegularExercise(exercise) {
-        // Regular exercise rendering
         return `<div class="exercise">...</div>`;
     }
 }
 
-// ===== 6. Exercise Library Enhancement =====
 class ExerciseLibrary {
     constructor() {
         this.categories = {
@@ -2418,7 +2231,6 @@ class ExerciseLibrary {
         const results = [];
         const searchTerm = query.toLowerCase();
         
-        // Search logic with filters
         this.exercises.forEach(exercise => {
             const matchesName = exercise.name.toLowerCase().includes(searchTerm);
             const matchesMuscle = !filters.muscle || exercise.muscle === filters.muscle;
@@ -2433,23 +2245,15 @@ class ExerciseLibrary {
             }
         });
         
-        // Sort by relevance
         return results.sort((a, b) => b.relevance - a.relevance);
     }
     
     calculateRelevance(exercise, searchTerm) {
         let score = 0;
         
-        // Exact match
         if (exercise.name.toLowerCase() === searchTerm) score += 10;
-        
-        // Starts with search term
         if (exercise.name.toLowerCase().startsWith(searchTerm)) score += 5;
-        
-        // Contains search term
         if (exercise.name.toLowerCase().includes(searchTerm)) score += 3;
-        
-        // Popular exercise
         if (this.categories.compound.includes(exercise.name)) score += 2;
         
         return score;
@@ -2466,7 +2270,6 @@ class ExerciseLibrary {
     }
 }
 
-// ===== 7. Notification System =====
 class NotificationManager {
     constructor() {
         this.permission = 'default';
@@ -2496,7 +2299,6 @@ class NotificationManager {
                 notification.close();
             };
             
-            // Auto close after 5 seconds
             setTimeout(() => notification.close(), 5000);
         }
     }
@@ -2527,7 +2329,6 @@ GymTracker.prototype.togglePRNotifications = function() {
     localStorage.setItem('gymTracker_pr_notifications', checked ? '1' : '0');
     this.showToast(checked ? 'Đã bật thông báo PR' : 'Đã tắt thông báo PR', 'info');
 }
-
 
 // Initialize app
 try {
