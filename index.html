@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Gym Tracker - Quản lý tập luyện thông minh</title>
     <meta name="description" content="Ứng dụng theo dõi và quản lý tập luyện gym với AI">
     <meta name="theme-color" content="#4CAF50">
@@ -12,18 +12,19 @@
 
     <!-- PWA -->
     <link rel="manifest" href="/manifest.json">
-    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png">
+    <link rel="icon" type="image/x-icon" href="/icon/favicon.ico">
+    <link rel="icon" type="image/png" sizes="96x96" href="/icon/Gym-favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon/Gym-192x192.png">
+    <link rel="apple-touch-icon" href="/icon/Gym-apple-touch-icon.png">
     <link rel="stylesheet" href="css/main.css">
-	
+    
     <!-- Chart.js Preload (cho analytics) -->
-    <link rel="preload" href="https://cdn.jsdelivr.net/npm/chart.js" as="script">
-	
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
 </head>
 <body>
-	<audio id="sound-beep" src="sounds/beep.mp3" preload="auto"></audio>
-	<audio id="sound-done" src="sounds/done.mp3" preload="auto"></audio>
+    <audio id="sound-beep" src="sounds/beep.mp3" preload="auto"></audio>
+    <audio id="sound-done" src="sounds/done.mp3" preload="auto"></audio>
 
     <!-- Install Banner -->
     <div id="install-banner" class="install-banner" style="display:none;">
@@ -123,14 +124,14 @@
                 <div class="section">
                     <div class="section-header">
                         <h2 class="section-title">Templates gần đây</h2>
-                        <a href="#templates" class="section-link">Xem tất cả →</a>
+                        <a href="#templates" class="section-link" onclick="app.loadPage('templates')">Xem tất cả →</a>
                     </div>
                     <div class="templates-grid" id="recent-templates"></div>
                 </div>
                 <div class="section">
                     <div class="section-header">
                         <h2 class="section-title">🏆 Personal Records</h2>
-                        <a href="#analytics" class="section-link">Xem analytics →</a>
+                        <a href="#analytics" class="section-link" onclick="app.loadPage('analytics')">Xem analytics →</a>
                     </div>
                     <div id="recent-prs" class="pr-list"></div>
                 </div>
@@ -139,7 +140,7 @@
             <!-- Templates Page -->
             <section id="templates-page" class="page">
                 <div class="page-header">
-                    <h2 class="page-title">Templates</h2>
+                    <h2 class="page-title">📋 Templates</h2>
                     <div class="header-actions">
                         <button class="btn btn-primary" onclick="app.createTemplate()">
                             <span class="btn-icon">➕</span>Tạo template
@@ -154,9 +155,9 @@
                 </div>
                 
                 <div class="filters">
-                    <input type="search" class="search-input" id="template-search" placeholder="Tìm kiếm templates...">
+                    <input type="search" class="search-input" id="template-search" placeholder="🔍 Tìm kiếm templates...">
                     <select class="filter-select" id="template-filter">
-                        <option value="">Tất cả</option>
+                        <option value="">Tất cả độ khó</option>
                         <option value="beginner">🌱 Người mới</option>
                         <option value="intermediate">⚡ Trung cấp</option>
                         <option value="advanced">🔥 Nâng cao</option>
@@ -167,11 +168,11 @@
                 <div class="templates-grid" id="all-templates"></div>
             </section>
 
-            <!-- Exercises Page -->
-			<section id="exercises-page" class="page">
-				<div class="page-header">
-					<h2 class="page-title">Bài tập</h2>
-					<div class="header-actions">
+            <!-- Exercises Page - FIXED -->
+            <section id="exercises-page" class="page">
+                <div class="page-header">
+                    <h2 class="page-title">🏋️ Quản lý bài tập</h2>
+                    <div class="header-actions">
                         <button class="btn btn-primary" onclick="app.openAddExerciseModal()">
                             <span class="btn-icon">➕</span>Thêm bài tập
                         </button>
@@ -182,78 +183,196 @@
                             <span class="btn-icon">📤</span>Export
                         </button>
                     </div>
-				</div>
+                </div>
                 
-                <!-- Thêm lại filters -->
+                <!-- Exercise Filters -->
                 <div class="filters">
-                    <input type="search" class="search-input" id="exercise-search" placeholder="Tìm kiếm bài tập...">
+                    <input type="search" class="search-input" id="exercise-search" placeholder="🔍 Tìm kiếm bài tập...">
                     <select class="filter-select" id="muscle-filter">
                         <option value="">Tất cả nhóm cơ</option>
-                        <option value="chest">Ngực</option>
-                        <option value="back">Lưng</option>
-                        <option value="legs">Chân</option>
-                        <option value="shoulders">Vai</option>
-                        <option value="arms">Tay</option>
-                        <option value="core">Bụng</option>
-                        <option value="cardio">Cardio</option>
-                        <option value="fullbody">Toàn thân</option>
+                        <option value="chest">💪 Ngực</option>
+                        <option value="back">🔙 Lưng</option>
+                        <option value="legs">🦵 Chân</option>
+                        <option value="shoulders">💪 Vai</option>
+                        <option value="arms">💪 Tay</option>
+                        <option value="core">🔥 Bụng</option>
+                        <option value="cardio">❤️ Cardio</option>
+                        <option value="fullbody">🏃 Toàn thân</option>
+                        <option value="olympic">🏋️ Olympic</option>
+                        <option value="other">💪 Khác</option>
+                    </select>
+                    <select class="filter-select" id="equipment-filter">
+                        <option value="">Tất cả thiết bị</option>
+                        <option value="bodyweight">Bodyweight</option>
+                        <option value="barbell">Barbell</option>
+                        <option value="dumbbell">Dumbbell</option>
+                        <option value="machine">Machine</option>
+                        <option value="cable">Cable</option>
                     </select>
                 </div>
                 
                 <input type="file" id="import-exercise-file" accept=".json" style="display:none;" onchange="app.importExercises(event)">
-				<div class="exercises-grid" id="all-exercises"></div>
-			</section>
+                
+                <!-- Exercise Stats -->
+                <div class="exercise-stats" style="margin-bottom: 20px;">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">🏋️</div>
+                            <div class="stat-content">
+                                <div class="stat-value" id="total-exercises-count">0</div>
+                                <div class="stat-label">Tổng bài tập</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">💪</div>
+                            <div class="stat-content">
+                                <div class="stat-value" id="strength-exercises-count">0</div>
+                                <div class="stat-label">Strength</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">❤️</div>
+                            <div class="stat-content">
+                                <div class="stat-value" id="cardio-exercises-count">0</div>
+                                <div class="stat-label">Cardio</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">🤸</div>
+                            <div class="stat-content">
+                                <div class="stat-value" id="bodyweight-exercises-count">0</div>
+                                <div class="stat-label">Bodyweight</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Exercise Grid -->
+                <div class="exercises-grid" id="all-exercises"></div>
+            </section>
 
-            <!-- Analytics Page -->
-			<section id="analytics-page" class="page">
-				<div class="page-header">
-					<h2 class="page-title">Analytics & Insights</h2>
-					<button class="btn btn-secondary" onclick="app.generateReport()">
-						<span class="btn-icon">📄</span>Generate Report
-					</button>
-				</div>
-				<div class="time-range-selector">
-					<button class="time-btn active" data-range="week">Week</button>
-					<button class="time-btn" data-range="month">Month</button>
-					<button class="time-btn" data-range="quarter">Quarter</button>
-					<button class="time-btn" data-range="year">Year</button>
-				</div>
-				<div class="analytics-grid">
-					<div class="chart-container">
-						<h3>Volume Progression</h3>
-						<canvas id="volume-chart"></canvas>
-					</div>
-					<div class="chart-container">
-						<h3>Muscle Distribution</h3>
-						<canvas id="muscle-distribution-chart"></canvas>
-					</div>
-					<div class="chart-container">
-						<h3>Workout Frequency</h3>
-						<canvas id="heatmap-chart"></canvas>
-					</div>
-					<div class="chart-container">
-						<h3>Personal Records</h3>
-						<canvas id="pr-chart"></canvas>
-					</div>
-					<div class="chart-container">
-						<h3>Strength Standards</h3>
-						<canvas id="strength-chart"></canvas>
-					</div>
-					<div class="chart-container">
-						<h3>Progress Prediction</h3>
-						<canvas id="prediction-chart"></canvas>
-					</div>
-				</div>
+            <!-- Analytics Page - UPDATED -->
+            <section id="analytics-page" class="page">
+                <div class="page-header">
+                    <h2 class="page-title">📊 Analytics & Insights</h2>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary" onclick="app.generateReport()">
+                            <span class="btn-icon">📄</span>Generate Report
+                        </button>
+                        <button class="btn btn-secondary" onclick="app.refreshAnalytics()">
+                            <span class="btn-icon">🔄</span>Refresh
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="time-range-selector">
+                    <button class="time-btn active" data-range="week">Week</button>
+                    <button class="time-btn" data-range="month">Month</button>
+                    <button class="time-btn" data-range="quarter">Quarter</button>
+                    <button class="time-btn" data-range="year">Year</button>
+                </div>
+                
+                <div class="analytics-grid">
+                    <div class="chart-container">
+                        <h3>📈 Volume Progression</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="volume-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <h3>🎯 Muscle Distribution</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="muscle-distribution-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <h3>📅 Workout Frequency</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="frequency-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <h3>🏆 Personal Records</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="pr-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <h3>💪 Strength Standards</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="strength-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <h3>🔮 Progress Prediction</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="prediction-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Analytics Summary -->
+                <div class="analytics-summary">
+                    <div class="summary-card">
+                        <h4>🎯 This Week</h4>
+                        <div id="weekly-summary" class="summary-content">
+                            <div class="summary-stat">
+                                <span class="stat-label">Workouts:</span>
+                                <span class="stat-value" id="weekly-workouts">-</span>
+                            </div>
+                            <div class="summary-stat">
+                                <span class="stat-label">Volume:</span>
+                                <span class="stat-value" id="weekly-volume">-</span>
+                            </div>
+                            <div class="summary-stat">
+                                <span class="stat-label">PRs:</span>
+                                <span class="stat-value" id="weekly-prs">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="summary-card">
+                        <h4>📊 All Time</h4>
+                        <div id="alltime-summary" class="summary-content">
+                            <div class="summary-stat">
+                                <span class="stat-label">Total Workouts:</span>
+                                <span class="stat-value" id="total-workouts-analytics">-</span>
+                            </div>
+                            <div class="summary-stat">
+                                <span class="stat-label">Total Volume:</span>
+                                <span class="stat-value" id="total-volume-analytics">-</span>
+                            </div>
+                            <div class="summary-stat">
+                                <span class="stat-label">Avg/Week:</span>
+                                <span class="stat-value" id="avg-workouts-week">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="insights-section">
                     <h3>🤖 AI Insights</h3>
-                    <div id="ai-insights" class="insights-grid"></div>
+                    <div id="ai-insights" class="insights-grid">
+                        <div class="insight-card">
+                            <div class="insight-icon">💡</div>
+                            <div class="insight-content">
+                                <h4>Smart Recommendations</h4>
+                                <p>AI insights will appear here based on your workout data and progress patterns.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
             <!-- History Page -->
             <section id="history-page" class="page">
                 <div class="page-header">
-                    <h2 class="page-title">Lịch sử tập luyện</h2>
+                    <h2 class="page-title">📅 Lịch sử tập luyện</h2>
                     <div class="header-actions">
                         <input type="file" id="import-file" accept=".json" style="display:none;" onchange="app.handleImportFile(event)">
                         <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()"><span class="btn-icon">📥</span>Import</button>
@@ -356,7 +475,7 @@
                 <button class="modal-close" onclick="app.closeExerciseSelect()">✕</button>
             </div>
             <div class="modal-body">
-                <input type="search" class="search-input" id="exercise-select-search" placeholder="Tìm kiếm bài tập...">
+                <input type="search" class="search-input" id="exercise-select-search" placeholder="🔍 Tìm kiếm bài tập...">
                 <div class="exercise-select-list" id="exercise-select-list"></div>
             </div>
             <div class="modal-footer">
@@ -366,17 +485,216 @@
         </div>
     </div>
 
+    <!-- Exercise Add Modal - FIXED -->
+    <div class="modal" id="exercise-add-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>➕ Thêm bài tập mới</h3>
+                <button class="modal-close" onclick="app.closeAddExerciseModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="exercise-add-form" onsubmit="event.preventDefault(); app.saveAddExercise();">
+                    <div class="form-group">
+                        <label for="exercise-add-name">Tên bài tập *</label>
+                        <input type="text" id="exercise-add-name" class="form-input" placeholder="VD: Bench Press, Squat..." required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Nhóm cơ *</label>
+                        <div id="exercise-add-muscle-group" class="chip-group" style="margin-top:8px;">
+                            <button type="button" class="chip-btn" data-value="chest">💪 Ngực</button>
+                            <button type="button" class="chip-btn" data-value="back">🔙 Lưng</button>
+                            <button type="button" class="chip-btn" data-value="legs">🦵 Chân</button>
+                            <button type="button" class="chip-btn" data-value="shoulders">💪 Vai</button>
+                            <button type="button" class="chip-btn" data-value="arms">💪 Tay</button>
+                            <button type="button" class="chip-btn" data-value="core">🔥 Bụng</button>
+                            <button type="button" class="chip-btn" data-value="cardio">❤️ Cardio</button>
+                            <button type="button" class="chip-btn" data-value="fullbody">🏃 Toàn thân</button>
+                            <button type="button" class="chip-btn" data-value="olympic">🏋️ Olympic</button>
+                            <button type="button" class="chip-btn" data-value="other">💪 Khác</button>
+                        </div>
+                        <input type="hidden" id="exercise-add-muscle" required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="exercise-add-type">Loại bài tập</label>
+                            <select id="exercise-add-type" class="form-select">
+                                <option value="strength">💪 Strength</option>
+                                <option value="bodyweight">🤸 Bodyweight</option>
+                                <option value="cardio">❤️ Cardio</option>
+                                <option value="hiit">🔥 HIIT</option>
+                                <option value="mobility">🧘 Mobility</option>
+                                <option value="stretching">🤸 Stretching</option>
+                                <option value="plyometrics">⚡ Plyometrics</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="exercise-add-equipment">Thiết bị</label>
+                            <select id="exercise-add-equipment" class="form-select">
+                                <option value="bodyweight">🤸 Bodyweight</option>
+                                <option value="barbell">🏋️ Barbell</option>
+                                <option value="dumbbell">🏋️ Dumbbell</option>
+                                <option value="machine">🔧 Machine</option>
+                                <option value="cable">🔗 Cable</option>
+                                <option value="weightedbodyweight">⚖️ Weighted Bodyweight</option>
+                                <option value="assistedbodyweight">🤝 Assisted Bodyweight</option>
+                                <option value="reponly">🔢 Rep Only</option>
+                                <option value="cardio">❤️ Cardio Equipment</option>
+                                <option value="duration">⏱️ Duration Based</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="exercise-add-unit">Đơn vị đo</label>
+                        <select id="exercise-add-unit" class="form-select">
+                            <option value="kg">🏋️ Kilograms (kg)</option>
+                            <option value="lb">🏋️ Pounds (lb)</option>
+                            <option value="reps">🔢 Reps only</option>
+                            <option value="minute">⏱️ Minutes</option>
+                            <option value="second">⏱️ Seconds</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="exercise-add-description">Mô tả (tùy chọn)</label>
+                        <textarea id="exercise-add-description" class="form-input" rows="2" placeholder="Hướng dẫn ngắn gọn về cách thực hiện..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="app.closeAddExerciseModal()">Hủy</button>
+                <button class="btn btn-primary" onclick="app.saveAddExercise()">➕ Thêm bài tập</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exercise Edit Modal - FIXED -->
+    <div class="modal" id="exercise-edit-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="exercise-edit-title">✏️ Chỉnh sửa bài tập</h3>
+                <button class="modal-close" onclick="app.closeEditExerciseModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="exercise-edit-form">
+                    <div class="form-group">
+                        <label for="exercise-edit-name">Tên bài tập</label>
+                        <input type="text" id="exercise-edit-name" class="form-input" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="exercise-edit-muscle">Nhóm cơ</label>
+                            <select id="exercise-edit-muscle" class="form-select">
+                                <option value="chest">💪 Ngực</option>
+                                <option value="back">🔙 Lưng</option>
+                                <option value="legs">🦵 Chân</option>
+                                <option value="shoulders">💪 Vai</option>
+                                <option value="arms">💪 Tay</option>
+                                <option value="core">🔥 Bụng</option>
+                                <option value="cardio">❤️ Cardio</option>
+                                <option value="fullbody">🏃 Toàn thân</option>
+                                <option value="olympic">🏋️ Olympic</option>
+                                <option value="other">💪 Khác</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="exercise-edit-type">Loại bài tập</label>
+                            <select id="exercise-edit-type" class="form-select">
+                                <option value="strength">💪 Strength</option>
+                                <option value="bodyweight">🤸 Bodyweight</option>
+                                <option value="cardio">❤️ Cardio</option>
+                                <option value="hiit">🔥 HIIT</option>
+                                <option value="mobility">🧘 Mobility</option>
+                                <option value="stretching">🤸 Stretching</option>
+                                <option value="plyometrics">⚡ Plyometrics</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="exercise-edit-equipment">Thiết bị</label>
+                            <select id="exercise-edit-equipment" class="form-select">
+                                <option value="bodyweight">🤸 Bodyweight</option>
+                                <option value="barbell">🏋️ Barbell</option>
+                                <option value="dumbbell">🏋️ Dumbbell</option>
+                                <option value="machine">🔧 Machine</option>
+                                <option value="cable">🔗 Cable</option>
+                                <option value="weightedbodyweight">⚖️ Weighted Bodyweight</option>
+                                <option value="assistedbodyweight">🤝 Assisted Bodyweight</option>
+                                <option value="reponly">🔢 Rep Only</option>
+                                <option value="cardio">❤️ Cardio Equipment</option>
+                                <option value="duration">⏱️ Duration Based</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="exercise-edit-unit">Đơn vị đo</label>
+                            <select id="exercise-edit-unit" class="form-select">
+                                <option value="kg">🏋️ Kilograms (kg)</option>
+                                <option value="lb">🏋️ Pounds (lb)</option>
+                                <option value="reps">🔢 Reps only</option>
+                                <option value="minute">⏱️ Minutes</option>
+                                <option value="second">⏱️ Seconds</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="exercise-edit-description">Mô tả</label>
+                        <textarea id="exercise-edit-description" class="form-input" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="app.closeEditExerciseModal()">Hủy</button>
+                <button class="btn btn-primary" onclick="app.saveEditExercise()">💾 Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Exercise History Modal -->
     <div class="modal" id="exercise-history-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="exercise-history-title">Lịch sử bài tập</h3>
+                <h3 id="exercise-history-title">📊 Lịch sử bài tập</h3>
                 <button class="modal-close" onclick="app.closeExerciseHistory()">✕</button>
             </div>
             <div class="modal-body">
-                <div id="exercise-history-chart" class="chart-container"><canvas id="exercise-progress-chart"></canvas></div>
+                <div id="exercise-history-chart" class="chart-container" style="margin-bottom: 20px;">
+                    <canvas id="exercise-progress-chart"></canvas>
+                </div>
                 <div id="exercise-history-list"></div>
             </div>
+        </div>
+    </div>
+
+    <!-- Exercise Picker Modal (for replacement) -->
+    <div class="modal" id="exercise-picker-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔄 Chọn bài tập thay thế</h3>
+                <button class="modal-close" onclick="app.closeExercisePicker()">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="search" class="search-input" placeholder="🔍 Tìm kiếm bài tập thay thế...">
+                <div id="exercise-picker-list"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="app.closeExercisePicker()">Hủy</button>
+                <button class="btn btn-primary" id="confirm-ex-picker-btn">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Workout Detail Modal -->
+    <div class="modal" id="workout-detail-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📊 Chi tiết Workout</h3>
+                <button class="modal-close" onclick="document.getElementById('workout-detail-modal').classList.remove('active')">✕</button>
+            </div>
+            <div class="modal-body" id="workout-detail-content"></div>
         </div>
     </div>
 
@@ -384,12 +702,12 @@
     <div class="modal" id="settings-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Cài đặt</h3>
+                <h3>⚙️ Cài đặt</h3>
                 <button class="modal-close" onclick="app.closeSettings()">✕</button>
             </div>
             <div class="modal-body">
                 <div class="settings-section">
-                    <h4>Notifications</h4>
+                    <h4>🔔 Notifications</h4>
                     <label class="toggle-setting">
                         <input type="checkbox" id="enable-notifications" onchange="app.toggleNotifications()">
                         <span>Thông báo rest timer</span>
@@ -399,8 +717,9 @@
                         <span>Thông báo Personal Records</span>
                     </label>
                 </div>
+                
                 <div class="settings-section">
-                    <h4>Units</h4>
+                    <h4>⚖️ Units</h4>
                     <label class="radio-setting">
                         <input type="radio" name="weight-unit" value="kg" checked onchange="app.setWeightUnit('kg')">
                         <span>Kilograms (kg)</span>
@@ -410,8 +729,9 @@
                         <span>Pounds (lb)</span>
                     </label>
                 </div>
+                
                 <div class="settings-section">
-                    <h4>Theme</h4>
+                    <h4>🎨 Theme</h4>
                     <label class="radio-setting">
                         <input type="radio" name="theme" value="auto" checked onchange="app.setTheme('auto')">
                         <span>Auto (System)</span>
@@ -425,8 +745,9 @@
                         <span>Dark</span>
                     </label>
                 </div>
+                
                 <div class="settings-section">
-                    <h4>AI Features</h4>
+                    <h4>🤖 AI Features</h4>
                     <label class="toggle-setting">
                         <input type="checkbox" id="enable-ai-suggestions" checked onchange="app.toggleAISuggestions()">
                         <span>AI Workout Suggestions</span>
@@ -444,7 +765,7 @@
     <div class="modal" id="backend-settings-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Sync Settings</h3>
+                <h3>☁️ Sync Settings</h3>
                 <button class="modal-close" onclick="app.closeBackendSettings()">✕</button>
             </div>
             <div class="modal-body">
@@ -522,163 +843,6 @@
             <span class="pr-text">Personal Record!</span>
         </div>
     </div>
-	
-	<div class="modal" id="workout-detail-modal">
-		<div class="modal-content">
-			<div class="modal-header">
-				<h3>Chi tiết Workout</h3>
-				<button class="modal-close" onclick="document.getElementById('workout-detail-modal').classList.remove('active')">✕</button>
-			</div>
-			<div class="modal-body" id="workout-detail-content"></div>
-		</div>
-	</div>
-	<div class="modal" id="exercise-picker-modal">
-		<div class="modal-content">
-			<div class="modal-header">
-				<h3>Chọn bài tập thay thế</h3>
-				<button class="modal-close" onclick="app.closeExercisePicker()">✕</button>
-			</div>
-			<div class="modal-body" id="exercise-picker-list"></div>
-			<div class="modal-footer">
-				<button class="btn btn-secondary" onclick="app.closeExercisePicker()">Hủy</button>
-				<button class="btn btn-primary" id="confirm-ex-picker-btn">Xác nhận</button>
-			</div>
-		</div>
-	</div>
-	<!-- Exercise Edit Modal -->
-	<div class="modal" id="exercise-edit-modal">
-		<div class="modal-content">
-			<div class="modal-header">
-				<h3 id="exercise-edit-title">Chỉnh sửa bài tập</h3>
-				<button class="modal-close" onclick="app.closeEditExerciseModal()">✕</button>
-			</div>
-			<div class="modal-body">
-				<form id="exercise-edit-form">
-					<div class="form-group">
-						<label for="exercise-edit-name">Tên bài tập</label>
-						<input type="text" id="exercise-edit-name" class="form-input" required>
-					</div>
-					<div class="form-group">
-						<label for="exercise-edit-muscle">Nhóm cơ</label>
-						<select id="exercise-edit-muscle" class="form-select">
-							<option value="chest">Ngực</option>
-							<option value="back">Lưng</option>
-							<option value="legs">Chân</option>
-							<option value="shoulders">Vai</option>
-							<option value="arms">Tay</option>
-							<option value="core">Bụng</option>
-							<option value="fullbody">Toàn thân</option>
-						</select>
-					</div>
-					<div class="form-group">
-						<label for="exercise-edit-type">Loại bài tập</label>
-						<select id="exercise-edit-type" class="form-select">
-							<option value="strength">Strength</option>
-							<option value="bodyweight">Bodyweight</option>
-							<option value="cardio">Cardio</option>
-							<option value="hiit">HIIT</option>
-							<option value="mobility">Mobility</option>
-							<option value="stretching">Stretching</option>
-							<option value="plyometrics">Plyometrics</option>
-						</select>
-					</div>
-					<div class="form-group">
-						<label for="exercise-edit-equipment">Thiết bị</label>
-						<input type="text" id="exercise-edit-equipment" class="form-input" placeholder="barbell, dumbbell, machine...">
-					</div>
-					<div class="form-group">
-						<label for="exercise-edit-unit">Đơn vị</label>
-						<select id="exercise-edit-unit" class="form-select">
-							<option value="kg">Kilograms (kg)</option>
-							<option value="lb">Pounds (lb)</option>
-							<option value="reps">Reps</option>
-							<option value="minute">Minute</option>
-							<option value="second">Second</option>
-						</select>
-					</div>
-				</form>
-			</div>
-			<div class="modal-footer">
-				<button class="btn btn-secondary" onclick="app.closeEditExerciseModal()">Hủy</button>
-				<button class="btn btn-primary" onclick="app.saveEditExercise()">Lưu thay đổi</button>
-			</div>
-		</div>
-	</div>
-	
-	<!-- Exercise Add Modal -->
-	<div class="modal" id="exercise-add-modal">
-		<div class="modal-content">
-			<div class="modal-header">
-				<h3>Thêm bài tập mới</h3>
-				<button class="modal-close" onclick="app.closeAddExerciseModal()">✕</button>
-			</div>
-			<div class="modal-body">
-				<form id="exercise-add-form" onsubmit="event.preventDefault(); app.saveAddExercise();">
-					<div class="form-group">
-						<label for="exercise-add-name">Tên bài tập</label>
-						<input type="text" id="exercise-add-name" class="form-input" required>
-					</div>
-					<div class="form-group">
-						<label>Nhóm cơ</label>
-						<div id="exercise-add-muscle-group" class="chip-group" style="margin-top:8px;">
-							<button type="button" class="chip-btn" data-value="arms">Tay</button>
-							<button type="button" class="chip-btn" data-value="back">Lưng</button>
-							<button type="button" class="chip-btn" data-value="cardio">Cardio</button>
-							<button type="button" class="chip-btn" data-value="chest">Ngực</button>
-							<button type="button" class="chip-btn" data-value="core">Bụng</button>
-							<button type="button" class="chip-btn" data-value="fullbody">Toàn thân</button>
-							<button type="button" class="chip-btn" data-value="legs">Chân</button>
-							<button type="button" class="chip-btn" data-value="olympic">Olympic</button>
-							<button type="button" class="chip-btn" data-value="shoulders">Vai</button>
-							<button type="button" class="chip-btn" data-value="other">Khác</button>
-						</div>
-						<input type="hidden" id="exercise-add-muscle">
-					</div>
-					<div class="form-group">
-						<label for="exercise-add-type">Loại bài tập</label>
-						<select id="exercise-add-type" class="form-select">
-							<option value="strength">Strength</option>
-							<option value="bodyweight">Bodyweight</option>
-							<option value="cardio">Cardio</option>
-							<option value="hiit">HIIT</option>
-							<option value="mobility">Mobility</option>
-							<option value="stretching">Stretching</option>
-							<option value="plyometrics">Plyometrics</option>
-						</select>
-					</div>
-					<div class="form-group">
-						<label for="exercise-add-equipment">Thiết bị</label>
-						<select id="exercise-add-equipment" class="form-select">
-							<option value="bodyweight">Bodyweight</option>
-							<option value="barbell">Barbell</option>
-							<option value="dumbbell">Dumbbell</option>
-							<option value="machine">Machine</option>
-							<option value="cable">Cable</option>
-							<option value="weightedbodyweight">Weighted Bodyweight</option>
-							<option value="assistedbodyweight">Assisted bodyweight</option>
-							<option value="reponly">Reponly</option>
-							<option value="cardio">Cardio</option>
-							<option value="duration">Duration</option>
-						</select>
-					</div>
-					<div class="form-group">
-						<label for="exercise-add-unit">Đơn vị</label>
-						<select id="exercise-add-unit" class="form-select">
-							<option value="kg">Kilograms (kg)</option>
-							<option value="lb">Pounds (lb)</option>
-							<option value="reps">Reps</option>
-							<option value="minute">Minute</option>
-							<option value="second">Second</option>
-						</select>
-					</div>
-				</form>
-			</div>
-			<div class="modal-footer">
-				<button class="btn btn-secondary" onclick="app.closeAddExerciseModal()">Hủy</button>
-				<button class="btn btn-primary" onclick="app.saveAddExercise()">Thêm bài tập</button>
-			</div>
-		</div>
-	</div>
 
     <!-- Toast Container -->
     <div class="toast-container" id="toast-container"></div>
@@ -687,11 +851,11 @@
     <div id="unit-context-menu" class="context-menu" style="display:none;position:absolute;z-index:1200;"></div>
 
     <!-- Main JS -->
-	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-	<script src="js/analytics.js"></script>
-	<script src="js/backend.js"></script>
-	<script src="js/ai.js"></script>
-	<script src="js/app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/analytics.js"></script>
+    <script src="js/backend.js"></script>
+    <script src="js/ai.js"></script>
+    <script src="js/app.js"></script>
 
     <!-- PWA & Service Worker, Install Banner, Online/Offline, New Version Notify -->
     <script>
@@ -749,7 +913,7 @@
             app.showToast('Bạn đang offline', 'warning');
         });
 
-        // Gắn event listener toàn cục cho menu ba chấm chỉ một lần
+        // Global click handler for menus
         document.addEventListener('click', function (e) {
             document.querySelectorAll('.exercise-menu').forEach(menu => {
                 if (!menu.contains(e.target) && !e.target.classList.contains('btn-ex-action') && !e.target.classList.contains('menu-icon')) {

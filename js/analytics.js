@@ -1,60 +1,106 @@
-// analytics.js - Advanced Analytics with Chart.js (Tối ưu cho Gym Tracker)
+// analytics.js - Advanced Analytics with Chart.js (Fixed & Improved)
 
 class AdvancedAnalytics {
     constructor(app) {
         this.app = app;
         this.charts = {};
+        this.colors = {
+            primary: '#4CAF50',
+            secondary: '#2196F3', 
+            warning: '#FFC107',
+            danger: '#F44336',
+            info: '#00BCD4',
+            success: '#8BC34A',
+            purple: '#9C27B0',
+            orange: '#FF9800'
+        };
+        this.colorArray = Object.values(this.colors);
     }
 
     // ===== Helper: Kiểm tra Chart.js =====
-	 ensureChartJs() {
-		if (!window.Chart) {
-			console.error("Chart.js not loaded!");
-			return false;
-		}
-		return true;
-	}
+    ensureChartJs() {
+        if (!window.Chart) {
+            console.error("Chart.js not loaded!");
+            this.showError("Chart.js library is required for analytics");
+            return false;
+        }
+        return true;
+    }
 
     // ===== Volume Progression Chart =====
     createVolumeChart(containerId, exerciseId = null) {
-        this.ensureChartJs();
+        if (!this.ensureChartJs()) return;
+        
         const canvas = document.getElementById(containerId);
         if (!canvas) return this.showNoCanvas(containerId, "Volume Chart");
 
-        const { labels, values } = this.getVolumeData(exerciseId);
+        const { labels, values, exerciseName } = this.getVolumeData(exerciseId);
 
-        if (values.every(v => v === 0)) {
-            return this.showNoData(canvas, "Không có dữ liệu volume.");
+        if (values.length === 0 || values.every(v => v === 0)) {
+            return this.showNoData(canvas, "Không có dữ liệu volume để hiển thị.");
         }
 
-        if (this.charts.volume) this.charts.volume.destroy();
+        // Destroy existing chart
+        if (this.charts.volume) {
+            this.charts.volume.destroy();
+        }
 
         this.charts.volume = new Chart(canvas.getContext('2d'), {
             type: 'line',
             data: {
                 labels,
                 datasets: [{
-                    label: exerciseId ? 'Volume ' + (this.app.exercises.find(ex => ex.id === exerciseId)?.name || "") : 'Tổng Volume (kg)',
+                    label: exerciseId ? `Volume - ${exerciseName}` : 'Tổng Volume (kg)',
                     data: values,
-                    borderColor: '#4CAF50',
-                    backgroundColor: '#4CAF5022',
+                    borderColor: this.colors.primary,
+                    backgroundColor: this.colors.primary + '22',
                     tension: 0.3,
-                    fill: true
+                    fill: true,
+                    pointBackgroundColor: this.colors.primary,
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 }]
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
-                    title: { display: true, text: 'Tiến trình Volume' },
+                    title: { 
+                        display: true, 
+                        text: exerciseId ? `Tiến trình Volume - ${exerciseName}` : 'Tiến trình Volume Tổng',
+                        font: { size: 16, weight: 'bold' }
+                    },
+                    legend: { display: false },
                     tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
                         callbacks: {
-                            label: ctx => `Volume: ${ctx.parsed.y.toLocaleString()} kg`
+                            label: (ctx) => `Volume: ${ctx.parsed.y.toLocaleString()} kg`
                         }
                     }
                 },
                 scales: {
-                    x: { title: { display: true, text: 'Tuần' } },
-                    y: { beginAtZero: true, title: { display: true, text: 'Volume (kg)' } }
+                    x: { 
+                        title: { display: true, text: 'Thời gian' },
+                        grid: { color: 'rgba(0,0,0,0.1)' }
+                    },
+                    y: { 
+                        beginAtZero: true, 
+                        title: { display: true, text: 'Volume (kg)' },
+                        grid: { color: 'rgba(0,0,0,0.1)' },
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString() + ' kg';
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
                 }
             }
         });
@@ -62,20 +108,20 @@ class AdvancedAnalytics {
 
     // ===== Muscle Distribution Chart =====
     createMuscleDistributionChart(containerId) {
-        this.ensureChartJs();
+        if (!this.ensureChartJs()) return;
+        
         const canvas = document.getElementById(containerId);
         if (!canvas) return this.showNoCanvas(containerId, "Muscle Distribution");
 
         const { labels, values } = this.getMuscleDistributionData();
 
-        if (!labels.length) return this.showNoData(canvas, "Không có dữ liệu nhóm cơ.");
+        if (!labels.length || values.every(v => v === 0)) {
+            return this.showNoData(canvas, "Không có dữ liệu nhóm cơ để hiển thị.");
+        }
 
-        if (this.charts.muscle) this.charts.muscle.destroy();
-
-        const colorArr = [
-            '#4CAF50', '#2196F3', '#FFC107', '#FF5722', '#9C27B0', '#00BCD4',
-            '#607D8B', '#E91E63', '#8BC34A', '#FF9800'
-        ];
+        if (this.charts.muscle) {
+            this.charts.muscle.destroy();
+        }
 
         this.charts.muscle = new Chart(canvas.getContext('2d'), {
             type: 'doughnut',
@@ -83,72 +129,100 @@ class AdvancedAnalytics {
                 labels,
                 datasets: [{
                     data: values,
-                    backgroundColor: colorArr,
-                    hoverOffset: 6
+                    backgroundColor: this.colorArray.slice(0, labels.length),
+                    borderColor: '#fff',
+                    borderWidth: 2,
+                    hoverOffset: 8
                 }]
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
-                    title: { display: true, text: 'Phân bổ nhóm cơ' },
-                    legend: { position: 'bottom' }
+                    title: { 
+                        display: true, 
+                        text: 'Phân bổ nhóm cơ',
+                        font: { size: 16, weight: 'bold' }
+                    },
+                    legend: { 
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        callbacks: {
+                            label: (ctx) => {
+                                const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((ctx.parsed * 100) / total).toFixed(1);
+                                return `${ctx.label}: ${ctx.parsed} buổi (${percentage}%)`;
+                            }
+                        }
+                    }
                 }
             }
         });
     }
 
-    // ===== Heatmap Chart (Yêu cầu chartjs-chart-matrix plugin) =====
-    createWorkoutHeatmap(containerId) {
-        this.ensureChartJs();
-        if (!Chart.registry || !Chart.registry.getChart || !Chart.registry.getChart('matrix')) {
-            // Plugin chưa load
-            const canvas = document.getElementById(containerId);
-            if (canvas) canvas.parentElement.innerHTML = "<p style='text-align:center;padding:30px'>Cần thêm plugin chartjs-chart-matrix để hiện heatmap.</p>";
-            return;
+    // ===== Workout Frequency Chart (Thay thế Heatmap) =====
+    createWorkoutFrequencyChart(containerId) {
+        if (!this.ensureChartJs()) return;
+        
+        const canvas = document.getElementById(containerId);
+        if (!canvas) return this.showNoCanvas(containerId, "Workout Frequency");
+
+        const { labels, values } = this.getWorkoutFrequencyData();
+
+        if (!labels.length || values.every(v => v === 0)) {
+            return this.showNoData(canvas, "Không có dữ liệu tần suất tập luyện.");
         }
 
-        const canvas = document.getElementById(containerId);
-        if (!canvas) return this.showNoCanvas(containerId, "Workout Heatmap");
+        if (this.charts.frequency) {
+            this.charts.frequency.destroy();
+        }
 
-        const heatmapData = this.getHeatmapData();
-        if (!heatmapData.length) return this.showNoData(canvas, "Không có dữ liệu heatmap.");
-
-        if (this.charts.heatmap) this.charts.heatmap.destroy();
-
-        this.charts.heatmap = new Chart(canvas.getContext('2d'), {
-            type: 'matrix',
-            data: { datasets: [{
-                label: 'Tần suất Workout',
-                data: heatmapData,
-                backgroundColor: ctx => {
-                    const v = ctx.dataset.data[ctx.dataIndex].v;
-                    if (!v) return '#21212133'; // ngày không tập
-                    const base = [76, 175, 80]; // #4CAF50
-                    const alpha = Math.min(0.15 + v * 0.28, 1);
-                    return `rgba(${base.join(',')},${alpha})`;
-                },
-                borderColor: '#2a2a2a',
-                borderWidth: 1,
-                width: ({chart}) => ((chart.chartArea?.width || 364) / 52) - 2,
-                height: ({chart}) => ((chart.chartArea?.height || 196) / 7) - 2
-            }]},
+        this.charts.frequency = new Chart(canvas.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Số buổi tập',
+                    data: values,
+                    backgroundColor: this.colors.info + '88',
+                    borderColor: this.colors.info,
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
-                    title: { display: true, text: 'Heatmap Workout (52 tuần)' },
-                    tooltip: {
-                        callbacks: {
-                            label: ctx => {
-                                const d = ctx.raw;
-                                return `${d.date}: ${d.v} buổi`;
-                            }
-                        }
+                    title: { 
+                        display: true, 
+                        text: 'Tần suất tập luyện theo ngày trong tuần',
+                        font: { size: 16, weight: 'bold' }
                     },
-                    legend: { display: false }
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        callbacks: {
+                            label: (ctx) => `${ctx.parsed.y} buổi tập`
+                        }
+                    }
                 },
                 scales: {
-                    x: { type: 'category', labels: Array.from({length: 52}, (_,i)=>`W${i+1}`), grid: {display: false}},
-                    y: { type: 'category', labels: ['CN','T7','T6','T5','T4','T3','T2'], grid: {display: false}}
+                    x: { 
+                        title: { display: true, text: 'Ngày trong tuần' },
+                        grid: { display: false }
+                    },
+                    y: { 
+                        beginAtZero: true, 
+                        title: { display: true, text: 'Số buổi tập' },
+                        ticks: { stepSize: 1 }
+                    }
                 }
             }
         });
@@ -156,35 +230,69 @@ class AdvancedAnalytics {
 
     // ===== Personal Records Timeline Chart =====
     createPRTimeline(containerId) {
-        this.ensureChartJs();
+        if (!this.ensureChartJs()) return;
+        
         const canvas = document.getElementById(containerId);
         if (!canvas) return this.showNoCanvas(containerId, "PR Timeline");
 
         const { datasets } = this.getPRTimelineData();
 
-        if (!datasets.length) return this.showNoData(canvas, "Chưa có Personal Records nào.");
+        if (!datasets.length) {
+            return this.showNoData(canvas, "Chưa có Personal Records để hiển thị.");
+        }
 
-        if (this.charts.pr) this.charts.pr.destroy();
+        if (this.charts.pr) {
+            this.charts.pr.destroy();
+        }
 
         this.charts.pr = new Chart(canvas.getContext('2d'), {
-            type: 'scatter',
+            type: 'line',
             data: { datasets },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
-                    title: { display: true, text: 'Personal Records Timeline' },
+                    title: { 
+                        display: true, 
+                        text: 'Personal Records Timeline',
+                        font: { size: 16, weight: 'bold' }
+                    },
+                    legend: { 
+                        position: 'top',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 15
+                        }
+                    },
                     tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
                         callbacks: {
-                            label: ctx => {
-                                const pr = ctx.raw;
-                                return `${pr.exercise}: ${pr.y}kg x ${pr.reps} (${new Date(pr.x).toLocaleDateString()})`;
+                            label: (ctx) => {
+                                const point = ctx.raw;
+                                const date = new Date(point.x).toLocaleDateString('vi-VN');
+                                return `${ctx.dataset.label}: ${point.y}kg (${date})`;
                             }
                         }
                     }
                 },
                 scales: {
-                    x: { type: 'time', time: { unit: 'week' }, title: {display:true, text:'Ngày'} },
-                    y: { beginAtZero: false, title: {display:true, text:'Weight (kg)'} }
+                    x: { 
+                        type: 'linear',
+                        title: { display: true, text: 'Workout Number' }
+                    },
+                    y: { 
+                        beginAtZero: false, 
+                        title: { display: true, text: 'Weight (kg)' },
+                        ticks: {
+                            callback: function(value) {
+                                return value + ' kg';
+                            }
+                        }
+                    }
+                },
+                elements: {
+                    point: { radius: 5, hoverRadius: 7 },
+                    line: { tension: 0.2 }
                 }
             }
         });
@@ -192,213 +300,431 @@ class AdvancedAnalytics {
 
     // ===== Strength Standards Radar Chart =====
     createStrengthStandardsChart(containerId) {
-        this.ensureChartJs();
+        if (!this.ensureChartJs()) return;
+        
         const canvas = document.getElementById(containerId);
         if (!canvas) return this.showNoCanvas(containerId, "Strength Standards");
 
-        const { labels, current, suggestedMax } = this.getStrengthStandardsData();
-        if (!labels.length || current.every(v=>!v)) return this.showNoData(canvas, "Không có dữ liệu sức mạnh.");
+        const { labels, current, targets, maxValue } = this.getStrengthStandardsData();
+        
+        if (!labels.length || current.every(v => !v)) {
+            return this.showNoData(canvas, "Không có dữ liệu sức mạnh để hiển thị.");
+        }
 
-        if (this.charts.strength) this.charts.strength.destroy();
+        if (this.charts.strength) {
+            this.charts.strength.destroy();
+        }
 
         this.charts.strength = new Chart(canvas.getContext('2d'), {
             type: 'radar',
             data: {
                 labels,
-                datasets: [{
-                    label: '1RM Ước tính',
-                    data: current,
-                    borderColor: '#4CAF50',
-                    backgroundColor: '#4CAF5044',
-                    pointBackgroundColor: '#4CAF50'
-                }]
+                datasets: [
+                    {
+                        label: '1RM Hiện tại',
+                        data: current,
+                        borderColor: this.colors.primary,
+                        backgroundColor: this.colors.primary + '44',
+                        pointBackgroundColor: this.colors.primary,
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    },
+                    {
+                        label: 'Mục tiêu',
+                        data: targets,
+                        borderColor: this.colors.warning,
+                        backgroundColor: this.colors.warning + '22',
+                        pointBackgroundColor: this.colors.warning,
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        borderDash: [5, 5]
+                    }
+                ]
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
-                    title: { display: true, text: 'So sánh sức mạnh (1RM)' }
+                    title: { 
+                        display: true, 
+                        text: 'So sánh sức mạnh (1RM ước tính)',
+                        font: { size: 16, weight: 'bold' }
+                    },
+                    legend: {
+                        position: 'top',
+                        labels: { usePointStyle: true }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        callbacks: {
+                            label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.r} kg`
+                        }
+                    }
                 },
                 scales: {
                     r: {
                         beginAtZero: true,
-                        suggestedMax,
-                        ticks: { callback: v => v + ' kg' }
+                        suggestedMax: maxValue,
+                        ticks: { 
+                            stepSize: Math.ceil(maxValue / 5),
+                            callback: (v) => v + ' kg'
+                        },
+                        grid: { color: 'rgba(0,0,0,0.1)' },
+                        angleLines: { color: 'rgba(0,0,0,0.1)' }
                     }
                 },
                 elements: {
                     line: { borderWidth: 2 },
-                    point: { radius: 3 }
+                    point: { radius: 4, hoverRadius: 6 }
                 }
             }
         });
     }
 
-    // ========== Helper ==========
+    // ===== Prediction Chart (New) =====
+    createPredictionChart(containerId) {
+        if (!this.ensureChartJs()) return;
+        
+        const canvas = document.getElementById(containerId);
+        if (!canvas) return this.showNoCanvas(containerId, "Progress Prediction");
+
+        const { datasets } = this.getPredictionData();
+
+        if (!datasets.length) {
+            return this.showNoData(canvas, "Không đủ dữ liệu để dự đoán tiến trình.");
+        }
+
+        if (this.charts.prediction) {
+            this.charts.prediction.destroy();
+        }
+
+        this.charts.prediction = new Chart(canvas.getContext('2d'), {
+            type: 'line',
+            data: { datasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: { 
+                        display: true, 
+                        text: 'Dự đoán tiến trình (6 tuần tới)',
+                        font: { size: 16, weight: 'bold' }
+                    },
+                    legend: { 
+                        position: 'top',
+                        labels: { usePointStyle: true }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        callbacks: {
+                            label: (ctx) => {
+                                const point = ctx.raw;
+                                const date = new Date(point.x).toLocaleDateString('vi-VN');
+                                const prediction = ctx.dataset.label.includes('Dự đoán') ? ' (dự đoán)' : '';
+                                return `${ctx.dataset.label}: ${point.y}kg${prediction}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { 
+                        type: 'linear',
+                        title: { display: true, text: 'Week Number' }
+                    },
+                    y: { 
+                        beginAtZero: false, 
+                        title: { display: true, text: 'Weight (kg)' }
+                    }
+                }
+            }
+        });
+    }
+
+    // ========== Helper Methods ==========
 
     showNoCanvas(containerId, name) {
-        console.warn(`Canvas with ID ${containerId} không tồn tại (${name})`);
-    }
-    showNoData(canvas, msg) {
-        if (canvas && canvas.parentElement) {
-            canvas.parentElement.innerHTML = `<div style="text-align:center;opacity:.6;padding:40px">${msg}</div>`;
+        console.warn(`Canvas with ID '${containerId}' not found for ${name}`);
+        const container = document.getElementById(containerId)?.parentElement;
+        if (container) {
+            container.innerHTML = `<div style="text-align:center;padding:40px;color:#666;">Canvas "${containerId}" not found</div>`;
         }
     }
 
-    // ========== Data Processing ==========
+    showNoData(canvas, message) {
+        if (canvas && canvas.parentElement) {
+            canvas.parentElement.innerHTML = `
+                <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;color:#666;min-height:200px;">
+                    <div style="font-size:3em;margin-bottom:16px;">📊</div>
+                    <div style="font-size:1.1em;font-weight:500;margin-bottom:8px;">Chưa có dữ liệu</div>
+                    <div style="font-size:0.9em;">${message}</div>
+                </div>
+            `;
+        }
+    }
+
+    showError(message) {
+        console.error('Analytics Error:', message);
+        // Could show toast notification here if available
+        if (this.app && this.app.showToast) {
+            this.app.showToast(`Analytics: ${message}`, 'error');
+        }
+    }
+
+    // ========== Data Processing Methods ==========
 
     getVolumeData(exerciseId = null) {
-        // 12 tuần gần nhất
-        const weeks = 12, labels = [], values = [];
-        for (let i = weeks-1; i >= 0; i--) {
-            const weekStart = new Date(); weekStart.setDate(weekStart.getDate() - (i*7) - weekStart.getDay());
-            weekStart.setHours(0,0,0,0);
-            const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate()+6);
-            weekEnd.setHours(23,59,59,999);
-            const weekWorkouts = this.app.workoutHistory.filter(w=>{
-                const d=new Date(w.date);
-                return d>=weekStart && d<=weekEnd;
+        const weeks = 12;
+        const labels = [];
+        const values = [];
+        let exerciseName = '';
+
+        if (exerciseId) {
+            const exercise = this.app.exercises.find(ex => ex.id === exerciseId);
+            exerciseName = exercise ? exercise.name : 'Unknown Exercise';
+        }
+
+        for (let i = weeks - 1; i >= 0; i--) {
+            const weekStart = new Date();
+            weekStart.setDate(weekStart.getDate() - (i * 7) - weekStart.getDay());
+            weekStart.setHours(0, 0, 0, 0);
+            
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekEnd.getDate() + 6);
+            weekEnd.setHours(23, 59, 59, 999);
+
+            const weekWorkouts = this.app.workoutHistory.filter(w => {
+                const date = new Date(w.date);
+                return date >= weekStart && date <= weekEnd;
             });
+
             let volume = 0;
-            weekWorkouts.forEach(w=>{
-                w.exercises.forEach(ex=>{
+            weekWorkouts.forEach(workout => {
+                workout.exercises.forEach(ex => {
                     if (!exerciseId || ex.id === exerciseId) {
-                        volume += ex.sets.reduce((s, set)=>s+(set.weight*set.reps||0),0);
+                        volume += ex.sets.reduce((sum, set) => {
+                            return sum + ((set.weight || 0) * (set.reps || 0));
+                        }, 0);
                     }
                 });
             });
-            labels.push(`Tuần ${weeks-i}`);
-            values.push(volume);
+
+            labels.push(`Tuần ${weeks - i}`);
+            values.push(Math.round(volume));
         }
-        return {labels, values};
+
+        return { labels, values, exerciseName };
     }
 
     getMuscleDistributionData() {
         const distribution = {};
-        this.app.workoutHistory.forEach(w=>{
-            const muscles = new Set();
-            w.exercises.forEach(ex=>{
-                muscles.add(this.app.getMuscleName(ex.muscle)||'Khác');
+        const workoutCount = {};
+
+        this.app.workoutHistory.forEach(workout => {
+            const musclesInWorkout = new Set();
+            
+            workout.exercises.forEach(ex => {
+                const muscleName = this.app.getMuscleName(ex.muscle) || 'Khác';
+                musclesInWorkout.add(muscleName);
             });
-            muscles.forEach(muscle=>{
-                distribution[muscle] = (distribution[muscle]||0)+1;
+
+            musclesInWorkout.forEach(muscle => {
+                workoutCount[muscle] = (workoutCount[muscle] || 0) + 1;
             });
         });
+
         return {
-            labels: Object.keys(distribution),
-            values: Object.values(distribution)
+            labels: Object.keys(workoutCount),
+            values: Object.values(workoutCount)
         };
     }
 
-    getHeatmapData() {
-        // 52 tuần, 7 ngày
-        const data = [];
-        const today = new Date();
-        const yearAgo = new Date(today);
-        yearAgo.setDate(today.getDate() - (52*7) + 1);
-        yearAgo.setHours(0,0,0,0);
+    getWorkoutFrequencyData() {
+        const dayNames = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+        const frequency = new Array(7).fill(0);
 
-        // Đếm workout từng ngày
-        const workoutCounts = new Map();
-        this.app.workoutHistory.forEach(w=>{
-            const d = new Date(w.date).toDateString();
-            workoutCounts.set(d, (workoutCounts.get(d)||0)+1);
+        this.app.workoutHistory.forEach(workout => {
+            const dayOfWeek = new Date(workout.date).getDay();
+            frequency[dayOfWeek]++;
         });
 
-        for(let i=0; i<52*7; i++) {
-            const currDate = new Date(yearAgo); currDate.setDate(yearAgo.getDate()+i);
-            const weekIndex = Math.floor(i/7);
-            const dayOfWeek = currDate.getDay();
-            let yAxisDay = (7-dayOfWeek)%7;
-            if(dayOfWeek===0) yAxisDay=0; else yAxisDay=7-dayOfWeek;
-            const dateStr = currDate.toDateString();
-            const count = workoutCounts.get(dateStr)||0;
-            data.push({
-                x: weekIndex,
-                y: yAxisDay,
-                v: count,
-                date: currDate.toLocaleDateString('vi-VN')
-            });
-        }
-        return data;
+        return {
+            labels: dayNames,
+            values: frequency
+        };
     }
 
     getPRTimelineData() {
-        // Chỉ lấy 4 bài chính
-        const targets = ['Bench Press','Squat','Deadlift','Overhead Press'];
-        const targetExercises = this.app.exercises.filter(ex=>targets.includes(ex.name));
-        const datasets=[], colors=['#4CAF50','#2196F3','#FFC107','#E91E63'];
-        targetExercises.forEach((def, idx)=>{
-            const prs=[]; let maxW=0;
+        // Get all exercises that have weight data
+        const exercisesWithData = this.app.exercises.filter(ex => 
+            this.app.workoutHistory.some(w => 
+                w.exercises.some(we => we.id === ex.id && 
+                    we.sets.some(set => set.weight > 0)
+                )
+            )
+        );
+
+        const datasets = [];
+        const colors = this.colorArray;
+
+        exercisesWithData.slice(0, 6).forEach((exercise, idx) => {
+            const prs = [];
+            let maxWeight = 0;
+
             this.app.workoutHistory
-                .sort((a,b)=>new Date(a.date)-new Date(b.date))
-                .forEach(w=>{
-                    const ex = w.exercises.find(e=>e.id===def.id);
-                    if(ex){
-                        const maxSet = ex.sets.reduce((maxSet,cur)=>
-                            (cur.weight||0)>(maxSet.weight||0)?cur:
-                            (cur.weight===maxSet.weight&&(cur.reps||0)>(maxSet.reps||0))?cur:maxSet
-                        ,{weight:0,reps:0});
-                        if(maxSet.weight>maxW){
-                            maxW=maxSet.weight;
+                .sort((a, b) => new Date(a.date) - new Date(b.date))
+                .forEach(workout => {
+                    const ex = workout.exercises.find(e => e.id === exercise.id);
+                    if (ex) {
+                        const maxSet = ex.sets.reduce((max, set) => 
+                            (set.weight || 0) > (max.weight || 0) ? set : max, 
+                            { weight: 0, reps: 0 }
+                        );
+
+                        if (maxSet.weight > maxWeight) {
+                            maxWeight = maxSet.weight;
                             prs.push({
-                                x: new Date(w.date).valueOf(),
-                                y: maxSet.weight,
-                                exercise: def.name,
-                                reps: maxSet.reps,
-                                date: new Date(w.date).toLocaleDateString('vi-VN')
+                                x: new Date(workout.date).valueOf(),
+                                y: maxSet.weight
                             });
                         }
                     }
                 });
-            if(prs.length)
+
+            if (prs.length > 0) {
                 datasets.push({
-                    label: def.name,
+                    label: exercise.name,
                     data: prs,
-                    borderColor: colors[idx%colors.length],
-                    backgroundColor: colors[idx%colors.length]+'88',
-                    showLine: true, tension: 0.1
+                    borderColor: colors[idx % colors.length],
+                    backgroundColor: colors[idx % colors.length] + '44',
+                    tension: 0.2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 });
+            }
         });
-        return {datasets};
+
+        return { datasets };
     }
 
     getStrengthStandardsData() {
-        const bodyweight = parseFloat(localStorage.getItem('userBodyweight'))||75;
+        const bodyweight = parseFloat(localStorage.getItem('userBodyweight')) || 75;
         const standards = [
-            {name:'Bench Press',target:1.5},
-            {name:'Squat',target:2.0},
-            {name:'Deadlift',target:2.5},
-            {name:'Overhead Press',target:1.0}
+            { name: 'Bench Press', target: 1.5 },
+            { name: 'Squat', target: 2.0 },
+            { name: 'Deadlift', target: 2.5 },
+            { name: 'Overhead Press', target: 1.0 }
         ];
-        const labels=[],current=[],targets=[],max1RM=0;
-        standards.forEach(std=>{
-            const def = this.app.exercises.find(e=>e.name===std.name);
-            if(def){
+
+        const labels = [];
+        const current = [];
+        const targets = [];
+        let maxValue = 0;
+
+        standards.forEach(std => {
+            const exercise = this.app.exercises.find(e => 
+                e.name.toLowerCase().includes(std.name.toLowerCase()) ||
+                std.name.toLowerCase().includes(e.name.toLowerCase())
+            );
+
+            if (exercise) {
                 labels.push(std.name);
-                let max1RMval=0;
-                this.app.workoutHistory.forEach(w=>{
-                    const ex = w.exercises.find(e=>e.id===def.id);
-                    if(ex){
-                        ex.sets.forEach(set=>{
-                            if(set.weight>0&&set.reps>0){
-                                const est1RM = set.weight*(1+set.reps/30);
-                                if(est1RM>max1RMval) max1RMval=est1RM;
+                
+                let max1RM = 0;
+                this.app.workoutHistory.forEach(workout => {
+                    const ex = workout.exercises.find(e => e.id === exercise.id);
+                    if (ex) {
+                        ex.sets.forEach(set => {
+                            if (set.weight > 0 && set.reps > 0) {
+                                // Epley formula for 1RM estimation
+                                const est1RM = set.weight * (1 + set.reps / 30);
+                                if (est1RM > max1RM) max1RM = est1RM;
                             }
                         });
                     }
                 });
-                current.push(Math.round(max1RMval));
-                targets.push(Math.round(bodyweight*std.target));
-                if(max1RMval>max1RM) max1RM=max1RMval;
+
+                const targetWeight = bodyweight * std.target;
+                current.push(Math.round(max1RM));
+                targets.push(Math.round(targetWeight));
+                maxValue = Math.max(maxValue, max1RM, targetWeight);
             }
         });
+
         return {
             labels,
             current,
-            suggestedMax: Math.ceil((max1RM*1.1)/10)*10
+            targets,
+            maxValue: Math.ceil((maxValue * 1.2) / 10) * 10 // Round up to nearest 10
         };
+    }
+
+    getPredictionData() {
+        // Simple linear regression prediction for volume progression
+        const volumeData = this.getVolumeData();
+        const datasets = [];
+
+        if (volumeData.values.length < 4) {
+            return { datasets: [] };
+        }
+
+        // Calculate trend
+        const n = volumeData.values.length;
+        const sumX = (n * (n - 1)) / 2;
+        const sumY = volumeData.values.reduce((a, b) => a + b, 0);
+        const sumXY = volumeData.values.reduce((sum, y, x) => sum + x * y, 0);
+        const sumX2 = volumeData.values.reduce((sum, _, x) => sum + x * x, 0);
+
+        const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+        const intercept = (sumY - slope * sumX) / n;
+
+        // Historical data
+        const historicalData = volumeData.values.map((value, index) => ({
+            x: new Date(Date.now() - (n - 1 - index) * 7 * 24 * 60 * 60 * 1000).valueOf(),
+            y: value
+        }));
+
+        // Prediction data (next 6 weeks)
+        const predictionData = [];
+        for (let i = 1; i <= 6; i++) {
+            const futureDate = new Date(Date.now() + i * 7 * 24 * 60 * 60 * 1000);
+            const predictedValue = Math.max(0, intercept + slope * (n + i - 1));
+            predictionData.push({
+                x: futureDate.valueOf(),
+                y: Math.round(predictedValue)
+            });
+        }
+
+        datasets.push(
+            {
+                label: 'Volume thực tế',
+                data: historicalData,
+                borderColor: this.colors.primary,
+                backgroundColor: this.colors.primary + '44',
+                tension: 0.3
+            },
+            {
+                label: 'Dự đoán volume',
+                data: predictionData,
+                borderColor: this.colors.warning,
+                backgroundColor: this.colors.warning + '44',
+                borderDash: [5, 5],
+                tension: 0.3
+            }
+        );
+
+        return { datasets };
+    }
+
+    // ===== Destroy all charts =====
+    destroyAllCharts() {
+        Object.values(this.charts).forEach(chart => {
+            if (chart && typeof chart.destroy === 'function') {
+                chart.destroy();
+            }
+        });
+        this.charts = {};
     }
 }
 
-// Xuất class để app.js sử dụng
+// Export class for app.js usage
 window.AdvancedAnalytics = AdvancedAnalytics;
