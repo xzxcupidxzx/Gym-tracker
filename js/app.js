@@ -118,54 +118,389 @@ class GymTracker {
     }
     
     // ===== Page Navigation =====
-    loadPage(page) {
-        // Update active nav
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.classList.toggle('active', link.dataset.page === page);
-        });
-        
-        // Update active page
-        document.querySelectorAll('.page').forEach(pageEl => {
-            pageEl.classList.toggle('active', pageEl.id === `${page}-page`);
-        });
-        
-        this.currentPage = page;
-        
-        // Load page content
-		switch(page) {
-			case 'home':
-				this.loadHomePage();
-				break;
-			case 'templates':
-				this.loadTemplatesPage();
-				break;
-			case 'exercises':
-				this.loadExercisesPage();
-				break;
-			case 'history':
-				this.loadHistoryPage();
+	loadPage(page) {
+		try {
+			// Update active nav
+			document.querySelectorAll('.nav-link').forEach(link => {
+				link.classList.toggle('active', link.dataset.page === page);
+			});
+			
+			// Update active page
+			document.querySelectorAll('.page').forEach(pageEl => {
+				pageEl.classList.toggle('active', pageEl.id === `${page}-page`);
+			});
+			
+			this.currentPage = page;
+			
+			// Load page content with error handling
+			switch(page) {
+				case 'home':
+					this.loadHomePage();
 					break;
-			case 'analytics':
-				setTimeout(() => {
-					const analytics = this.getAnalytics();
-					if (analytics) {
-						analytics.createVolumeChart('volume-chart');
-						analytics.createMuscleDistributionChart('muscle-distribution-chart');
-						// analytics.createWorkoutHeatmap('heatmap-chart'); // Tạm comment nếu lỗi
-						analytics.createPRTimeline('pr-chart');
-						analytics.createStrengthStandardsChart('strength-chart');
-					}
-				}, 100);
-				break;
+					
+				case 'templates':
+					this.loadTemplatesPage();
+					break;
+					
+				case 'exercises':
+					this.loadExercisesPage();
+					break;
+					
+				case 'history':
+					this.loadHistoryPage();
+					break;
+					
+				case 'analytics':
+					this.loadAnalyticsPage();
+					break;
+					
+				default:
+					console.warn(`Unknown page: ${page}`);
+					this.loadHomePage(); // Fallback to home
+			}
+			
+			// Update URL hash without triggering hashchange
+			if (window.location.hash !== `#${page}`) {
+				history.replaceState(null, null, `#${page}`);
+			}
+			
+		} catch (error) {
+			console.error('Error loading page:', error);
+			this.showToast('Lỗi tải trang, vui lòng thử lại', 'error');
 		}
 	}
-    
+
+	// ===== Analytics Page Loading (Separate Function) =====
+	loadAnalyticsPage() {
+		const analyticsContainer = document.querySelector('#analytics-page .analytics-grid');
+		
+		// Check if we have workout data
+		if (this.workoutHistory.length === 0) {
+			if (analyticsContainer) {
+				analyticsContainer.innerHTML = `
+					<div class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+						<div class="empty-icon" style="font-size: 4rem; margin-bottom: 1rem;">📊</div>
+						<div class="empty-title" style="font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary);">
+							Chưa có dữ liệu phân tích
+						</div>
+						<div class="empty-text" style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+							Hoàn thành một vài buổi tập để xem analytics chi tiết
+						</div>
+						<button class="btn btn-primary" onclick="app.startQuickWorkout()" style="margin-top: 1rem;">
+							<span class="btn-icon">🚀</span>
+							Bắt đầu tập ngay
+						</button>
+					</div>
+				`;
+			}
+			return;
+		}
+
+
+	// ===== Remove Chart Loading State =====
+	removeChartLoading(chartIndex) {
+		const chartContainers = document.querySelectorAll('#analytics-page .chart-container');
+		if (chartContainers[chartIndex]) {
+			const loading = chartContainers[chartIndex].querySelector('.chart-loading');
+			if (loading) {
+				loading.remove();
+			}
+		}
+	}
+
+	// ===== Show Chart Error =====
+	showChartError(chartIndex, chartName) {
+		const chartContainers = document.querySelectorAll('#analytics-page .chart-container');
+		if (chartContainers[chartIndex]) {
+			const container = chartContainers[chartIndex];
+			const loading = container.querySelector('.chart-loading');
+			
+			if (loading) {
+				loading.innerHTML = `
+					<div style="text-align: center; color: var(--text-secondary);">
+						<div style="font-size: 2rem; margin-bottom: 0.5rem;">⚠️</div>
+						<div>Lỗi tải ${chartName}</div>
+						<button class="btn btn-sm btn-secondary" onclick="app.retryChart(${chartIndex})" style="margin-top: 0.5rem;">
+							Thử lại
+						</button>
+					</div>
+				`;
+			}
+		}
+	}
+
+	// ===== Show Analytics Error =====
+	showAnalyticsError(message) {
+		const analyticsContainer = document.querySelector('#analytics-page .analytics-grid');
+		if (analyticsContainer) {
+			analyticsContainer.innerHTML = `
+				<div class="error-state" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+					<div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
+					<div style="font-size: 1.2rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary);">
+						${message}
+					</div>
+					<button class="btn btn-primary" onclick="app.loadPage('analytics')" style="margin-top: 1rem;">
+						🔄 Thử lại
+					</button>
+				</div>
+			`;
+		}
+	}
+
+	// ===== Load AI Insights =====
+	loadAIInsights() {
+		const insightsContainer = document.getElementById('ai-insights');
+		if (!insightsContainer) return;
+		
+		try {
+			// Generate AI insights based on workout data
+			const insights = this.generateAIInsights();
+			
+			if (insights.length === 0) {
+				insightsContainer.innerHTML = `
+					<div class="insight-card" style="text-align: center; color: var(--text-secondary);">
+						<div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🤖</div>
+						<div>Cần thêm dữ liệu để tạo insights</div>
+					</div>
+				`;
+				return;
+			}
+			
+			insightsContainer.innerHTML = insights.map(insight => `
+				<div class="insight-card" style="padding: 1rem; background: var(--bg-secondary); border-radius: 8px; border-left: 4px solid var(--primary);">
+					<div class="insight-icon" style="font-size: 1.2rem; margin-bottom: 0.5rem;">${insight.icon}</div>
+					<div class="insight-title" style="font-weight: 600; margin-bottom: 0.25rem;">${insight.title}</div>
+					<div class="insight-text" style="color: var(--text-secondary); font-size: 0.9rem;">${insight.text}</div>
+				</div>
+			`).join('');
+			
+		} catch (error) {
+			console.error('Error loading AI insights:', error);
+			insightsContainer.innerHTML = `
+				<div class="insight-card" style="text-align: center; color: var(--text-secondary);">
+					<div>⚠️ Lỗi tải insights</div>
+				</div>
+			`;
+		}
+	}
+
+	// ===== Generate AI Insights =====
+	generateAIInsights() {
+		if (this.workoutHistory.length < 2) return [];
+		
+		const insights = [];
+		
+		try {
+			// Workout frequency insight
+			const weeklyFrequency = this.calculateWeeklyFrequency();
+			if (weeklyFrequency < 3) {
+				insights.push({
+					icon: '📈',
+					title: 'Tăng tần suất tập',
+					text: `Bạn đang tập ${weeklyFrequency} lần/tuần. Nên tập 3-4 lần để có kết quả tối ưu.`
+				});
+			}
+			
+			// Volume progression insight
+			const volumeTrend = this.calculateVolumeTrend();
+			if (volumeTrend > 10) {
+				insights.push({
+					icon: '💪',
+					title: 'Tiến bộ tuyệt vời!',
+					text: `Volume tập luyện đã tăng ${volumeTrend.toFixed(1)}% so với tuần trước.`
+				});
+			}
+			
+			// Rest day insight
+			const daysSinceLastWorkout = this.getDaysSinceLastWorkout();
+			if (daysSinceLastWorkout > 3) {
+				insights.push({
+					icon: '⏰',
+					title: 'Đã lâu không tập',
+					text: `${daysSinceLastWorkout} ngày từ buổi tập cuối. Hãy quay lại phòng gym!`
+				});
+			}
+			
+			// Muscle group balance
+			const muscleBalance = this.analyzeMuscleBalance();
+			if (muscleBalance.imbalanced.length > 0) {
+				insights.push({
+					icon: '⚖️',
+					title: 'Cân bằng nhóm cơ',
+					text: `Nên tập thêm: ${muscleBalance.imbalanced.join(', ')} để cân bằng cơ thể.`
+				});
+			}
+			
+		} catch (error) {
+			console.error('Error generating insights:', error);
+		}
+		
+		return insights.slice(0, 4); // Limit to 4 insights
+	}
+
+	// ===== Helper Methods for Insights =====
+	calculateWeeklyFrequency() {
+		const oneWeekAgo = new Date();
+		oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+		
+		return this.workoutHistory.filter(w => 
+			new Date(w.date) >= oneWeekAgo
+		).length;
+	}
+
+	calculateVolumeTrend() {
+		if (this.workoutHistory.length < 4) return 0;
+		
+		const recent = this.workoutHistory.slice(0, 2);
+		const previous = this.workoutHistory.slice(2, 4);
+		
+		const recentVolume = recent.reduce((sum, w) => sum + this.calculateWorkoutVolume(w), 0);
+		const previousVolume = previous.reduce((sum, w) => sum + this.calculateWorkoutVolume(w), 0);
+		
+		if (previousVolume === 0) return 0;
+		return ((recentVolume - previousVolume) / previousVolume) * 100;
+	}
+
+	calculateWorkoutVolume(workout) {
+		return workout.exercises.reduce((total, ex) => {
+			return total + ex.sets.reduce((sum, set) => {
+				return sum + (set.weight * set.reps || 0);
+			}, 0);
+		}, 0);
+	}
+
+	getDaysSinceLastWorkout() {
+		if (this.workoutHistory.length === 0) return 999;
+		
+		const lastWorkout = new Date(this.workoutHistory[0].date);
+		const now = new Date();
+		return Math.floor((now - lastWorkout) / (1000 * 60 * 60 * 24));
+	}
+
+	analyzeMuscleBalance() {
+		const muscleCount = {};
+		const recentWorkouts = this.workoutHistory.slice(0, 4);
+		
+		recentWorkouts.forEach(workout => {
+			workout.exercises.forEach(ex => {
+				muscleCount[ex.muscle] = (muscleCount[ex.muscle] || 0) + 1;
+			});
+		});
+		
+		const avgCount = Object.values(muscleCount).reduce((sum, count) => sum + count, 0) / Object.keys(muscleCount).length;
+		const imbalanced = Object.entries(muscleCount)
+			.filter(([muscle, count]) => count < avgCount * 0.7)
+			.map(([muscle]) => this.getMuscleName(muscle));
+		
+		return { muscleCount, imbalanced };
+	}
+
+	// ===== Retry Chart Function =====
+	retryChart(chartIndex) {
+		// Implementation for retrying specific chart
+		this.showToast('Đang thử lại...', 'info');
+		setTimeout(() => {
+			this.renderAnalyticsCharts();
+		}, 500);
+	}
+		// Show loading state
+		this.showAnalyticsLoading();
+		
+		// Load analytics with delay to prevent blocking
+		setTimeout(() => {
+			this.renderAnalyticsCharts();
+		}, 100);
+	}
+
     // ===== Home Page =====
     loadHomePage() {
         this.renderRecentTemplates();
         this.updateStats();
     }
-    
+	// Thêm các functions này vào class GymTracker trong app.js
+
+	// Export Templates
+	exportTemplates() {
+		const data = {
+			templates: this.templates,
+			exportDate: new Date().toISOString(),
+			version: '1.0'
+		};
+		
+		const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = `gym-tracker-templates-${new Date().toISOString().split('T')[0]}.json`;
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+		URL.revokeObjectURL(url);
+		
+		this.showToast('Đã xuất danh sách templates!', 'success');
+	}
+
+	// Import Templates  
+	importTemplates(event) {
+		const file = event.target.files[0];
+		if (!file) {
+			this.showToast('Không có file nào được chọn.', 'warning');
+			return;
+		}
+		
+		const reader = new FileReader();
+		reader.onload = (e) => {
+			try {
+				const data = JSON.parse(e.target.result);
+				
+				// Validate data structure
+				if (!data.templates || !Array.isArray(data.templates)) {
+					this.showToast('File không hợp lệ (thiếu templates)', 'error');
+					return;
+				}
+				
+				// Ask user preference: merge or replace
+				const action = confirm('Chọn OK để THAY THẾ toàn bộ, Cancel để THÊM VÀO danh sách hiện tại');
+				
+				if (action) {
+					// Replace all templates
+					this.templates = data.templates;
+				} else {
+					// Merge templates (avoid duplicates by name)
+					const existingNames = this.templates.map(t => t.name.toLowerCase());
+					const newTemplates = data.templates.filter(t => 
+						!existingNames.includes(t.name.toLowerCase())
+					);
+					
+					// Assign new IDs to avoid conflicts
+					newTemplates.forEach(template => {
+						template.id = this.generateId();
+						template.importedAt = new Date().toISOString();
+					});
+					
+					this.templates = [...this.templates, ...newTemplates];
+					
+					if (newTemplates.length === 0) {
+						this.showToast('Không có template mới nào được thêm (tất cả đã tồn tại)', 'info');
+						return;
+					}
+				}
+				
+				this.saveData('templates', this.templates);
+				this.renderAllTemplates();
+				this.showToast(`Đã import ${data.templates.length} templates thành công!`, 'success');
+				
+			} catch (err) {
+				console.error('Import error:', err);
+				this.showToast('File không hợp lệ hoặc bị lỗi!', 'error');
+			}
+		};
+		
+		reader.readAsText(file);
+		
+		// Reset input để có thể import lại cùng file
+		event.target.value = '';
+	}
     renderRecentTemplates() {
         const container = document.getElementById('recent-templates');
         const recentTemplates = this.templates.slice(0, 4);
@@ -2480,6 +2815,50 @@ class NotificationManager {
             tag: 'milestone'
         });
     }
+	// ===== AI Features (Placeholder) =====
+
+	acceptAISuggestion() {
+		document.getElementById('ai-suggestion-banner').style.display = 'none';
+		this.showToast('Đã chấp nhận gợi ý AI! 🤖✅', 'success');
+	}
+
+	// Settings functions
+	openSettings() {
+		document.getElementById('settings-modal').classList.add('active');
+	}
+
+	closeSettings() {
+		document.getElementById('settings-modal').classList.remove('active');
+	}
+
+	openBackendSettings() {
+		document.getElementById('backend-settings-modal').classList.add('active');
+	}
+
+	closeBackendSettings() {
+		document.getElementById('backend-settings-modal').classList.remove('active');
+	}
+
+	// Placeholder settings functions
+	setWeightUnit(unit) {
+		localStorage.setItem('gymTracker_weightUnit', unit);
+		this.showToast(`Đã đổi đơn vị sang ${unit.toUpperCase()}`, 'info');
+	}
+
+	setTheme(theme) {
+		localStorage.setItem('gymTracker_theme', theme);
+		this.showToast(`Đã đổi theme sang ${theme}`, 'info');
+	}
+
+	toggleAISuggestions() {
+		const checked = document.getElementById('enable-ai-suggestions').checked;
+		localStorage.setItem('gymTracker_aiSuggestions', checked ? '1' : '0');
+	}
+
+	toggleFormChecks() {
+		const checked = document.getElementById('enable-form-checks').checked;
+		localStorage.setItem('gymTracker_formChecks', checked ? '1' : '0');
+	}
 }
 
 GymTracker.prototype.toggleNotifications = function() {
