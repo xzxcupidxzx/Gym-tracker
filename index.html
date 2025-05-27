@@ -486,90 +486,128 @@
     </div>
 
     <!-- Exercise Add Modal - FIXED -->
-    <div class="modal" id="exercise-add-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>➕ Thêm bài tập mới</h3>
-                <button class="modal-close" onclick="app.closeAddExerciseModal()">✕</button>
-            </div>
-            <div class="modal-body">
-                <form id="exercise-add-form" onsubmit="event.preventDefault(); app.saveAddExercise();">
-                    <div class="form-group">
-                        <label for="exercise-add-name">Tên bài tập *</label>
-                        <input type="text" id="exercise-add-name" class="form-input" placeholder="VD: Bench Press, Squat..." required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Nhóm cơ *</label>
-                        <div id="exercise-add-muscle-group" class="chip-group" style="margin-top:8px;">
-                            <button type="button" class="chip-btn" data-value="chest">💪 Ngực</button>
-                            <button type="button" class="chip-btn" data-value="back">🔙 Lưng</button>
-                            <button type="button" class="chip-btn" data-value="legs">🦵 Chân</button>
-                            <button type="button" class="chip-btn" data-value="shoulders">💪 Vai</button>
-                            <button type="button" class="chip-btn" data-value="arms">💪 Tay</button>
-                            <button type="button" class="chip-btn" data-value="core">🔥 Bụng</button>
-                            <button type="button" class="chip-btn" data-value="cardio">❤️ Cardio</button>
-                            <button type="button" class="chip-btn" data-value="fullbody">🏃 Toàn thân</button>
-                            <button type="button" class="chip-btn" data-value="olympic">🏋️ Olympic</button>
-                            <button type="button" class="chip-btn" data-value="other">💪 Khác</button>
-                        </div>
-                        <input type="hidden" id="exercise-add-muscle" required>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="exercise-add-type">Loại bài tập</label>
-                            <select id="exercise-add-type" class="form-select">
-                                <option value="strength">💪 Strength</option>
-                                <option value="bodyweight">🤸 Bodyweight</option>
-                                <option value="cardio">❤️ Cardio</option>
-                                <option value="hiit">🔥 HIIT</option>
-                                <option value="mobility">🧘 Mobility</option>
-                                <option value="stretching">🤸 Stretching</option>
-                                <option value="plyometrics">⚡ Plyometrics</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="exercise-add-equipment">Thiết bị</label>
-                            <select id="exercise-add-equipment" class="form-select">
-                                <option value="bodyweight">🤸 Bodyweight</option>
-                                <option value="barbell">🏋️ Barbell</option>
-                                <option value="dumbbell">🏋️ Dumbbell</option>
-                                <option value="machine">🔧 Machine</option>
-                                <option value="cable">🔗 Cable</option>
-                                <option value="weightedbodyweight">⚖️ Weighted Bodyweight</option>
-                                <option value="assistedbodyweight">🤝 Assisted Bodyweight</option>
-                                <option value="reponly">🔢 Rep Only</option>
-                                <option value="cardio">❤️ Cardio Equipment</option>
-                                <option value="duration">⏱️ Duration Based</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="exercise-add-unit">Đơn vị đo</label>
-                        <select id="exercise-add-unit" class="form-select">
-                            <option value="kg">🏋️ Kilograms (kg)</option>
-                            <option value="lb">🏋️ Pounds (lb)</option>
-                            <option value="reps">🔢 Reps only</option>
-                            <option value="minute">⏱️ Minutes</option>
-                            <option value="second">⏱️ Seconds</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="exercise-add-description">Mô tả (tùy chọn)</label>
-                        <textarea id="exercise-add-description" class="form-input" rows="2" placeholder="Hướng dẫn ngắn gọn về cách thực hiện..."></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="app.closeAddExerciseModal()">Hủy</button>
-                <button class="btn btn-primary" onclick="app.saveAddExercise()">➕ Thêm bài tập</button>
-            </div>
-        </div>
-    </div>
+	<div class="modal" id="exercise-add-modal">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h3>➕ Thêm bài tập mới</h3>
+				<button class="modal-close" onclick="app.closeAddExerciseModal()">✕</button>
+			</div>
+			<div class="modal-body">
+				<form id="exercise-add-form" onsubmit="event.preventDefault(); return false;">
+					<div class="form-group">
+						<label for="exercise-add-name">Tên bài tập *</label>
+						<input type="text" id="exercise-add-name" class="form-input" placeholder="VD: Bench Press, Squat..." required>
+					</div>
+					
+					<div class="form-group">
+						<label>Nhóm cơ *</label>
+						<div id="exercise-add-muscle-group" class="chip-group" style="margin-top:8px;">
+							<button type="button" class="chip-btn" data-value="chest">💪 Ngực</button>
+							<button type="button" class="chip-btn" data-value="back">🔙 Lưng</button>
+							<button type="button" class="chip-btn" data-value="legs">🦵 Chân</button>
+							<button type="button" class="chip-btn" data-value="shoulders">💪 Vai</button>
+							<button type="button" class="chip-btn" data-value="arms">💪 Tay</button>
+							<button type="button" class="chip-btn" data-value="core">🔥 Bụng</button>
+							<button type="button" class="chip-btn" data-value="cardio">❤️ Cardio</button>
+							<button type="button" class="chip-btn" data-value="fullbody">🏃 Toàn thân</button>
+							<button type="button" class="chip-btn" data-value="olympic">🏋️ Olympic</button>
+							<button type="button" class="chip-btn" data-value="other">💪 Khác</button>
+						</div>
+						<input type="hidden" id="exercise-add-muscle" required>
+					</div>
+					
+					<div class="form-row">
+						<div class="form-group">
+							<label for="exercise-add-type">Loại bài tập</label>
+							<select id="exercise-add-type" class="form-select">
+								<option value="strength">💪 Strength</option>
+								<option value="bodyweight">🤸 Bodyweight</option>
+								<option value="cardio">❤️ Cardio</option>
+								<option value="hiit">🔥 HIIT</option>
+								<option value="mobility">🧘 Mobility</option>
+								<option value="stretching">🤸 Stretching</option>
+								<option value="plyometrics">⚡ Plyometrics</option>
+							</select>
+						</div>
+						
+						<div class="form-group">
+							<label for="exercise-add-equipment">Thiết bị</label>
+							<select id="exercise-add-equipment" class="form-select">
+								<option value="bodyweight">🤸 Bodyweight</option>
+								<option value="barbell">🏋️ Barbell</option>
+								<option value="dumbbell">🏋️ Dumbbell</option>
+								<option value="machine">🔧 Machine</option>
+								<option value="cable">🔗 Cable</option>
+								<option value="weightedbodyweight">⚖️ Weighted Bodyweight</option>
+								<option value="assistedbodyweight">🤝 Assisted Bodyweight</option>
+								<option value="reponly">🔢 Rep Only</option>
+								<option value="cardio">❤️ Cardio Equipment</option>
+								<option value="duration">⏱️ Duration Based</option>
+							</select>
+						</div>
+					</div>
+					
+					<div class="form-group">
+						<label for="exercise-add-unit">Đơn vị đo</label>
+						<select id="exercise-add-unit" class="form-select">
+							<option value="kg">🏋️ Kilograms (kg)</option>
+							<option value="lb">🏋️ Pounds (lb)</option>
+							<option value="reps">🔢 Reps only</option>
+							<option value="minute">⏱️ Minutes</option>
+							<option value="second">⏱️ Seconds</option>
+						</select>
+					</div>
+					
+					<div class="form-group">
+						<label for="exercise-add-description">Mô tả (tùy chọn)</label>
+						<textarea id="exercise-add-description" class="form-input" rows="2" placeholder="Hướng dẫn ngắn gọn về cách thực hiện..."></textarea>
+					</div>
+					
+					<!-- Image section -->
+					<div class="form-group">
+						<label>Hình ảnh bài tập (tùy chọn)</label>
+						<div class="image-input-tabs">
+							<button type="button" class="tab-btn active" onclick="app.switchImageTab('add', 'upload', event)">📤 Upload</button>
+							<button type="button" class="tab-btn" onclick="app.switchImageTab('add', 'url', event)">🔗 URL</button>
+						</div>
+						
+						<!-- Upload tab -->
+						<div id="exercise-add-upload-tab" class="image-tab active">
+							<div class="image-upload-area">
+								<input type="file" id="exercise-add-image" accept="image/*" onchange="app.previewExerciseImage(event, 'add')" style="display:none;">
+								<div id="exercise-add-image-preview" class="image-preview-container">
+									<label for="exercise-add-image" class="upload-placeholder">
+										<span class="upload-icon">📷</span>
+										<span class="upload-text">Click để tải ảnh lên</span>
+									</label>
+								</div>
+							</div>
+						</div>
+						
+						<!-- URL tab -->
+						<div id="exercise-add-url-tab" class="image-tab" style="display:none;">
+							<div class="url-input-wrapper">
+								<input type="url" 
+									   id="exercise-add-image-url" 
+									   class="form-input" 
+									   placeholder="https://example.com/image.jpg"
+									   onpaste="app.handleImageUrlPaste(event, 'add')"
+									   oninput="app.debounceImageUrlPreview('add')">
+								<button type="button" class="btn btn-sm" onclick="app.previewImageFromUrl('add')">Preview</button>
+							</div>
+							<div id="exercise-add-url-preview" class="image-preview-container" style="margin-top: 10px; display:none;">
+								<!-- URL preview will appear here -->
+							</div>
+						</div>
+					</div>
+				</form>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" onclick="app.closeAddExerciseModal()">Hủy</button>
+				<button type="button" class="btn btn-primary" onclick="app.saveAddExercise()">➕ Thêm bài tập</button>
+			</div>
+		</div>
+	</div>
 
     <!-- Exercise Edit Modal - FIXED -->
     <div class="modal" id="exercise-edit-modal">
@@ -644,6 +682,42 @@
                         <label for="exercise-edit-description">Mô tả</label>
                         <textarea id="exercise-edit-description" class="form-input" rows="2"></textarea>
                     </div>
+					<div class="form-group">
+						<label>Hình ảnh bài tập</label>
+						<div class="image-input-tabs">
+							<button type="button" class="tab-btn active" onclick="app.switchImageTab('edit', 'upload')">📤 Upload</button>
+							<button type="button" class="tab-btn" onclick="app.switchImageTab('edit', 'url')">🔗 URL</button>
+						</div>
+						
+						<!-- Upload tab -->
+						<div id="exercise-edit-upload-tab" class="image-tab active">
+							<div class="image-upload-area">
+								<input type="file" id="exercise-edit-image" accept="image/*" onchange="app.previewExerciseImage(event, 'edit')" style="display:none;">
+								<div id="exercise-edit-image-preview" class="image-preview-container">
+									<label for="exercise-edit-image" class="upload-placeholder">
+										<span class="upload-icon">📷</span>
+										<span class="upload-text">Click để thay đổi ảnh</span>
+									</label>
+								</div>
+							</div>
+						</div>
+						
+						<!-- URL tab -->
+						<div id="exercise-edit-url-tab" class="image-tab" style="display:none;">
+							<div class="url-input-wrapper">
+								<input type="url" 
+									   id="exercise-edit-image-url" 
+									   class="form-input" 
+									   placeholder="https://example.com/image.jpg"
+									   onpaste="app.handleImageUrlPaste(event, 'edit')"
+									   oninput="app.debounceImageUrlPreview('edit')">
+								<button type="button" class="btn btn-sm" onclick="app.previewImageFromUrl('edit')">Preview</button>
+							</div>
+							<div id="exercise-edit-url-preview" class="image-preview-container" style="margin-top: 10px; display:none;">
+								<!-- URL preview will appear here -->
+							</div>
+						</div>
+					</div>
                 </form>
             </div>
             <div class="modal-footer">

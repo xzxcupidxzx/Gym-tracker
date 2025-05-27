@@ -27,6 +27,7 @@ class GymTracker {
         this.currentWorkout = null;
         this.currentTemplate = null;
         this.selectedExercises = [];
+		this.selectedExerciseIds = [];
         this.workoutTimer = null;
         this.restTimer = null;
         this.setRestIntervals = {};
@@ -49,7 +50,9 @@ class GymTracker {
         this.exerciseLibrary = new ExerciseLibrary();
         this.exerciseLibrary.exercises = this.exercises;
         this.notifications = new NotificationManager();
-
+		this.tempImageData = null;
+		this.tempImageType = 'upload'; // 'upload' or 'url'
+		this.imagePreviewTimeout = null;
         // Initialize app
         this.init();
     }
@@ -78,23 +81,27 @@ class GymTracker {
         return this.analytics;
     }
 
-    mergeDefaultExercises() {
-        const defaultExercises = this.getDefaultExercises();
-        const userExercises = this.exercises;
-        const userIds = userExercises.map(ex => ex.id);
-        let added = false;
-        
-        defaultExercises.forEach(defEx => {
-            if (!userIds.includes(defEx.id)) {
-                userExercises.push(defEx);
-                added = true;
-            }
-        });
-        
-        if (added) {
-            this.saveData('exercises', userExercises);
-        }
-    }
+	mergeDefaultExercises() {
+		if (!this.exercises || this.exercises.length === 0) {
+			// Không merge gì cả nếu exercises rỗng (tức user đã xóa hết hoặc chưa thêm gì)
+			return;
+		}
+		const defaultExercises = this.getDefaultExercises();
+		const userExercises = this.exercises;
+		const userIds = userExercises.map(ex => ex.id);
+		let added = false;
+		
+		defaultExercises.forEach(defEx => {
+			if (!userIds.includes(defEx.id)) {
+				userExercises.push(defEx);
+				added = true;
+			}
+		});
+		
+		if (added) {
+			this.saveData('exercises', userExercises);
+		}
+	}
 
     setupEventListeners() {
         // Navigation
@@ -392,7 +399,18 @@ class GymTracker {
         this.renderAllExercises();
         this.updateExerciseStats();
     }
-
+	
+	loadExercises() {
+		const data = localStorage.getItem('exercises');
+		if (data) {
+			// Nếu đã từng có data, luôn dùng data đó (kể cả là mảng rỗng)
+			this.exercises = JSON.parse(data);
+		} else {
+			// Lần đầu, chưa có data => nạp mặc định
+			this.exercises = DEFAULT_EXERCISES;
+			this.saveData('exercises', this.exercises); // Lưu mặc định lần đầu
+		}
+	}
     renderAllExercises() {
         const container = document.getElementById('all-exercises');
         
@@ -415,38 +433,38 @@ class GymTracker {
         ).join('');
     }
 
-    createExerciseCard(exercise) {
-        return `
-            <div class="exercise-card" data-exercise-id="${exercise.id}">
-                <div class="exercise-icon">${this.getMuscleIcon(exercise.muscle)}</div>
-                <div class="exercise-name">${exercise.name}</div>
-                <div class="exercise-muscle">${this.getMuscleName(exercise.muscle)}</div>
-                <div class="exercise-meta" style="font-size:0.8em;color:var(--text-secondary);margin:4px 0;">
-                    <span class="exercise-type">${this.getTypeIcon(exercise.type)} ${exercise.type || 'strength'}</span>
-                    <br>
-                    <span class="exercise-equipment">${this.getEquipmentIcon(exercise.equipment)} ${exercise.equipment || 'N/A'}</span>
-                </div>
-                <div class="exercise-actions" style="margin-top:8px;display:flex;gap:4px;justify-content:center;">
-                    <button class="btn btn-sm btn-secondary" 
-                            onclick="event.stopPropagation(); app.openEditExerciseModal('${exercise.id}')" 
-                            title="Chỉnh sửa">
-                        ✏️
-                    </button>
-                    <button class="btn btn-sm btn-primary" 
-                            onclick="event.stopPropagation(); app.viewExerciseHistory('${exercise.id}')" 
-                            title="Xem lịch sử">
-                        📊
-                    </button>
-                    <button class="btn btn-sm btn-danger" 
-                            onclick="event.stopPropagation(); app.deleteExercise('${exercise.id}')" 
-                            title="Xóa">
-                        🗑️
-                    </button>
-                </div>
-            </div>
-        `;
-    }
-
+	createExerciseCard(exercise) {
+		const muscle = exercise.muscle || exercise.muscleGroup || 'other';
+		const muscleName = this.getMuscleName(muscle) || '';
+		const type = exercise.type || 'strength';
+		const equipment = exercise.equipment || 'N/A';
+		const name = exercise.name || '(No name)';
+		return `
+			<div class="exercise-card" data-exercise-id="${exercise.id}">
+				<div class="exercise-thumbnail" style="margin-bottom:8px;display:flex;justify-content:center;align-items:center;min-height:64px;">
+					${
+						exercise.image && exercise.image.trim() !== ""
+						? `<img src="${exercise.image}" alt="${name}" class="exercise-img-thumb"
+							   style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid #bbb;"
+							   onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'exercise-icon\\'>${this.getMuscleIcon(muscle)}</div>'">`
+						: `<div class="exercise-icon" style="font-size:2.5em;">${this.getMuscleIcon(muscle)}</div>`
+					}
+				</div>
+				<div class="exercise-name">${name}</div>
+				<div class="exercise-muscle">${muscleName}</div>
+				<div class="exercise-meta" style="font-size:0.8em;color:var(--text-secondary);margin:4px 0;">
+					<span class="exercise-type">${this.getTypeIcon(type)} ${type}</span>
+					<br>
+					<span class="exercise-equipment">${this.getEquipmentIcon(equipment)} ${equipment}</span>
+				</div>
+				<div class="exercise-actions" style="margin-top:8px;display:flex;gap:4px;justify-content:center;">
+					<button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); app.openEditExerciseModal('${exercise.id}')" title="Chỉnh sửa">✏️</button>
+					<button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); app.viewExerciseHistory('${exercise.id}')" title="Xem lịch sử">📊</button>
+					<button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); app.deleteExercise('${exercise.id}')" title="Xóa">🗑️</button>
+				</div>
+			</div>
+		`;
+	}
     updateExerciseStats() {
         const total = this.exercises.length;
         const strengthCount = this.exercises.filter(e => e.type === 'strength').length;
@@ -490,121 +508,373 @@ class GymTracker {
         document.getElementById('exercise-add-modal').classList.add('active');
     }
 
-    closeAddExerciseModal() {
-        document.getElementById('exercise-add-modal').classList.remove('active');
-    }
+	closeAddExerciseModal() {
+		document.getElementById('exercise-add-modal').classList.remove('active');
+		document.getElementById('exercise-add-form').reset();
+		
+		// Reset image previews
+		this.removeExerciseImage('add');
+		this.removeUrlImage('add');
+		
+		// Reset to upload tab
+		this.switchImageTab('add', 'upload');
+		
+		// Clear chip selections
+		document.querySelectorAll('#exercise-add-muscle-group .chip-btn').forEach(btn => {
+			btn.classList.remove('selected');
+		});
+		document.getElementById('exercise-add-muscle').value = '';
+		
+		// Clear temp data
+		this.tempImageData = null;
+		this.tempImageType = 'upload';
+	}
 
-    saveAddExercise() {
-        const name = document.getElementById('exercise-add-name').value.trim();
-        const muscle = document.getElementById('exercise-add-muscle').value;
-        const type = document.getElementById('exercise-add-type').value;
-        const equipment = document.getElementById('exercise-add-equipment').value;
-        const unit = document.getElementById('exercise-add-unit').value;
-        const description = document.getElementById('exercise-add-description').value.trim();
+	saveAddExercise() {
+		const name = document.getElementById('exercise-add-name').value.trim();
+		const muscle = document.getElementById('exercise-add-muscle').value;
+		const type = document.getElementById('exercise-add-type').value;
+		const equipment = document.getElementById('exercise-add-equipment').value;
+		const unit = document.getElementById('exercise-add-unit').value;
+		const description = document.getElementById('exercise-add-description').value.trim();
+		
+		if (!name || !muscle) {
+			this.showToast('Vui lòng điền đầy đủ thông tin bắt buộc', 'error');
+			return;
+		}
+		
+		const newExercise = {
+			id: this.generateId(),
+			name,
+			muscleGroup: muscle,
+			type,
+			equipment,
+			unit,
+			description,
+			image: this.tempImageData || null,
+			imageType: this.tempImageData ? this.tempImageType : null,
+			custom: true,
+			createdAt: new Date().toISOString()
+		};
+		
+		this.exercises.push(newExercise);
+		this.saveData('exercises', this.exercises);
+		
+		this.closeAddExerciseModal();
+		this.renderExercises();
+		this.showToast(`Đã thêm bài tập "${name}" thành công!`, 'success');
+		
+		// Clear temp data
+		this.tempImageData = null;
+		this.tempImageType = 'upload';
+	}
+	// Switch between upload and URL tabs
+	switchImageTab(mode, tab) {
+		// Update tab buttons
+		document.querySelectorAll(`#exercise-${mode}-modal .tab-btn`).forEach(btn => {
+			btn.classList.remove('active');
+		});
+		event.target.classList.add('active');
+		
+		// Show/hide tabs
+		const uploadTab = document.getElementById(`exercise-${mode}-upload-tab`);
+		const urlTab = document.getElementById(`exercise-${mode}-url-tab`);
+		
+		if (tab === 'upload') {
+			uploadTab.style.display = 'block';
+			urlTab.style.display = 'none';
+			this.tempImageType = 'upload';
+		} else {
+			uploadTab.style.display = 'none';
+			urlTab.style.display = 'block';
+			this.tempImageType = 'url';
+		}
+	}
 
-        // Validation
-        if (!name) {
-            this.showToast("Tên bài tập không được để trống!", "error");
-            return;
-        }
-        if (!muscle) {
-            this.showToast("Vui lòng chọn nhóm cơ!", "error");
-            return;
-        }
+	// Preview exercise image from file
+	previewExerciseImage(event, mode) {
+		const file = event.target.files[0];
+		if (!file) return;
+		
+		// Validate file size (max 5MB)
+		if (file.size > 5 * 1024 * 1024) {
+			this.showToast('Ảnh phải nhỏ hơn 5MB', 'error');
+			event.target.value = '';
+			return;
+		}
+		
+		// Validate file type
+		if (!file.type.startsWith('image/')) {
+			this.showToast('Vui lòng chọn file ảnh', 'error');
+			event.target.value = '';
+			return;
+		}
+		
+		const reader = new FileReader();
+		reader.onload = (e) => {
+			const previewContainer = document.getElementById(`exercise-${mode}-image-preview`);
+			previewContainer.classList.add('has-image');
+			previewContainer.innerHTML = `
+				<div class="preview-image-wrapper">
+					<img src="${e.target.result}" alt="Preview">
+					<button type="button" class="remove-image-btn" onclick="app.removeExerciseImage('${mode}')" title="Xóa ảnh">×</button>
+				</div>
+			`;
+			
+			// Store image data
+			this.tempImageData = e.target.result;
+			this.tempImageType = 'upload';
+		};
+		reader.readAsDataURL(file);
+	}
 
-        // Check duplicate
-        const isDuplicate = this.exercises.some(e => 
-            e.name.toLowerCase() === name.toLowerCase() && e.muscle === muscle
-        );
-        
-        if (isDuplicate) {
-            this.showToast("Bài tập đã tồn tại!", "warning");
-            return;
-        }
+	// Preview image from URL
+	async previewImageFromUrl(mode) {
+		const urlInput = document.getElementById(`exercise-${mode}-image-url`);
+		const url = urlInput.value.trim();
+		
+		if (!url) {
+			this.showToast('Vui lòng nhập URL hình ảnh', 'warning');
+			return;
+		}
+		
+		// Validate URL format
+		if (!this.isValidImageUrl(url)) {
+			this.showToast('URL không hợp lệ. Vui lòng nhập URL hình ảnh (.jpg, .png, .gif, .webp)', 'error');
+			return;
+		}
+		
+		const previewContainer = document.getElementById(`exercise-${mode}-url-preview`);
+		previewContainer.style.display = 'block';
+		previewContainer.innerHTML = `
+			<div class="image-loading">
+				<div class="loading-spinner"></div>
+				<span>Đang tải ảnh...</span>
+			</div>
+		`;
+		
+		try {
+			// Test if image loads successfully
+			await this.testImageUrl(url);
+			
+			previewContainer.classList.add('has-image');
+			previewContainer.innerHTML = `
+				<div class="preview-image-wrapper">
+					<img src="${url}" alt="Preview" onload="app.onImageLoaded('${mode}')" onerror="app.onImageError('${mode}')">
+					<button type="button" class="remove-image-btn" onclick="app.removeUrlImage('${mode}')" title="Xóa ảnh">×</button>
+				</div>
+			`;
+			
+			// Store image URL
+			this.tempImageData = url;
+			this.tempImageType = 'url';
+			
+		} catch (error) {
+			previewContainer.innerHTML = `
+				<div class="image-error">
+					<span class="error-icon">⚠️</span>
+					<span>Không thể tải ảnh từ URL này</span>
+					<small>${error.message}</small>
+				</div>
+			`;
+		}
+	}
 
-        // Create new exercise
-        const newExercise = {
-            id: this.generateId(),
-            name,
-            muscle,
-            type,
-            equipment,
-            unit,
-            description,
-            createdAt: new Date().toISOString()
-        };
+	// Validate image URL format
+	isValidImageUrl(url) {
+		try {
+			const urlObj = new URL(url);
+			const validProtocols = ['http:', 'https:'];
+			const validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
+			
+			if (!validProtocols.includes(urlObj.protocol)) {
+				return false;
+			}
+			
+			// Check if URL has image extension or common image hosting patterns
+			const pathname = urlObj.pathname.toLowerCase();
+			const hasImageExtension = validExtensions.some(ext => pathname.endsWith(ext));
+			const isImageHost = urlObj.hostname.includes('imgur') || 
+							   urlObj.hostname.includes('cloudinary') ||
+							   urlObj.hostname.includes('unsplash') ||
+							   urlObj.hostname.includes('pexels');
+			
+			return hasImageExtension || isImageHost || pathname.includes('/image');
+		} catch {
+			return false;
+		}
+	}
 
-        this.exercises.push(newExercise);
-        this.saveData('exercises', this.exercises);
-        this.renderAllExercises();
-        this.updateExerciseStats();
-        this.closeAddExerciseModal();
-        this.showToast("Đã thêm bài tập mới! ✅", "success");
-    }
+	// Test if image URL is accessible
+	testImageUrl(url) {
+		return new Promise((resolve, reject) => {
+			const img = new Image();
+			img.onload = () => resolve(true);
+			img.onerror = () => reject(new Error('Không thể tải ảnh'));
+			img.src = url;
+			
+			// Timeout after 10 seconds
+			setTimeout(() => reject(new Error('Timeout - Ảnh tải quá lâu')), 10000);
+		});
+	}
 
+	// Handle image loaded successfully
+	onImageLoaded(mode) {
+		console.log('Image loaded successfully');
+	}
+
+	// Handle image load error
+	onImageError(mode) {
+		const previewContainer = document.getElementById(`exercise-${mode}-url-preview`);
+		previewContainer.innerHTML = `
+			<div class="image-error">
+				<span class="error-icon">⚠️</span>
+				<span>Lỗi tải ảnh</span>
+				<small>Kiểm tra lại URL hoặc thử URL khác</small>
+			</div>
+		`;
+		this.tempImageData = null;
+	}
+
+	// Handle paste event for URL input
+	handleImageUrlPaste(event, mode) {
+		setTimeout(() => {
+			const url = event.target.value.trim();
+			if (this.isValidImageUrl(url)) {
+				this.previewImageFromUrl(mode);
+			}
+		}, 100);
+	}
+
+	// Debounce URL preview
+	debounceImageUrlPreview(mode) {
+		clearTimeout(this.imagePreviewTimeout);
+		this.imagePreviewTimeout = setTimeout(() => {
+			const url = document.getElementById(`exercise-${mode}-image-url`).value.trim();
+			if (url && this.isValidImageUrl(url)) {
+				this.previewImageFromUrl(mode);
+			}
+		}, 1000);
+	}
+
+	// Remove uploaded image
+	removeExerciseImage(mode) {
+		const input = document.getElementById(`exercise-${mode}-image`);
+		const previewContainer = document.getElementById(`exercise-${mode}-image-preview`);
+		
+		input.value = '';
+		this.tempImageData = null;
+		
+		previewContainer.classList.remove('has-image');
+		previewContainer.innerHTML = `
+			<label for="exercise-${mode}-image" class="upload-placeholder">
+				<span class="upload-icon">📷</span>
+				<span class="upload-text">Click để ${mode === 'add' ? 'tải ảnh lên' : 'thay đổi ảnh'}</span>
+			</label>
+		`;
+	}
+
+	// Remove URL image
+	removeUrlImage(mode) {
+		const urlInput = document.getElementById(`exercise-${mode}-image-url`);
+		const previewContainer = document.getElementById(`exercise-${mode}-url-preview`);
+		
+		urlInput.value = '';
+		this.tempImageData = null;
+		
+		previewContainer.style.display = 'none';
+		previewContainer.innerHTML = '';
+	}
     // ===== EDIT EXERCISE MODAL - FIXED =====
-    openEditExerciseModal(exerciseId) {
-        this.editingExerciseId = exerciseId;
-        const exercise = this.exercises.find(e => e.id === exerciseId);
-        
-        if (!exercise) {
-            this.showToast("Không tìm thấy bài tập!", "error");
-            return;
-        }
+	openEditExerciseModal(exerciseId) {
+		const exercise = this.exercises.find(ex => ex.id === exerciseId);
+		if (!exercise) return;
+		
+		this.editingExerciseId = exerciseId;
+		
+		// Reset form
+		document.getElementById('exercise-edit-name').value = exercise.name;
+		document.getElementById('exercise-edit-muscle').value = exercise.muscleGroup;
+		document.getElementById('exercise-edit-type').value = exercise.type || 'strength';
+		document.getElementById('exercise-edit-equipment').value = exercise.equipment || 'barbell';
+		document.getElementById('exercise-edit-unit').value = exercise.unit || 'kg';
+		document.getElementById('exercise-edit-description').value = exercise.description || '';
+		
+		// Reset tabs
+		this.switchImageTab('edit', exercise.imageType || 'upload');
+		
+		// Load existing image
+		if (exercise.image) {
+			if (exercise.imageType === 'url') {
+				document.getElementById('exercise-edit-image-url').value = exercise.image;
+				this.previewImageFromUrl('edit');
+			} else {
+				const previewContainer = document.getElementById('exercise-edit-image-preview');
+				previewContainer.classList.add('has-image');
+				previewContainer.innerHTML = `
+					<div class="preview-image-wrapper">
+						<img src="${exercise.image}" alt="${exercise.name}">
+						<button type="button" class="remove-image-btn" onclick="app.removeExerciseImage('edit')" title="Xóa ảnh">×</button>
+					</div>
+				`;
+			}
+		}
+		
+		document.getElementById('exercise-edit-modal').classList.add('active');
+	}
 
-        // Populate form
-        document.getElementById('exercise-edit-name').value = exercise.name || '';
-        document.getElementById('exercise-edit-muscle').value = exercise.muscle || '';
-        document.getElementById('exercise-edit-type').value = exercise.type || 'strength';
-        document.getElementById('exercise-edit-equipment').value = exercise.equipment || '';
-        document.getElementById('exercise-edit-unit').value = exercise.unit || 'kg';
-        document.getElementById('exercise-edit-description').value = exercise.description || '';
+	closeEditExerciseModal() {
+		document.getElementById('exercise-edit-modal').classList.remove('active');
+		this.editingExerciseId = null;
+		
+		// Clear temp data
+		this.tempImageData = undefined;
+		this.tempImageType = 'upload';
+	}
 
-        // Show modal
-        document.getElementById('exercise-edit-modal').classList.add('active');
-    }
-
-    closeEditExerciseModal() {
-        document.getElementById('exercise-edit-modal').classList.remove('active');
-        this.editingExerciseId = null;
-    }
-
-    saveEditExercise() {
-        const exerciseId = this.editingExerciseId;
-        const exercise = this.exercises.find(e => e.id === exerciseId);
-        
-        if (!exercise) {
-            this.showToast("Không tìm thấy bài tập!", "error");
-            return;
-        }
-
-        const name = document.getElementById('exercise-edit-name').value.trim();
-        const muscle = document.getElementById('exercise-edit-muscle').value;
-        const type = document.getElementById('exercise-edit-type').value;
-        const equipment = document.getElementById('exercise-edit-equipment').value.trim();
-        const unit = document.getElementById('exercise-edit-unit').value;
-        const description = document.getElementById('exercise-edit-description').value.trim();
-
-        if (!name) {
-            this.showToast("Tên bài tập không được để trống", "error");
-            return;
-        }
-
-        // Update exercise
-        exercise.name = name;
-        exercise.muscle = muscle;
-        exercise.type = type;
-        exercise.equipment = equipment;
-        exercise.unit = unit;
-        exercise.description = description;
-        exercise.updatedAt = new Date().toISOString();
-
-        this.saveData('exercises', this.exercises);
-        this.renderAllExercises();
-        this.updateExerciseStats();
-        this.closeEditExerciseModal();
-        this.showToast("Đã cập nhật bài tập! ✅", "success");
-    }
+	saveEditExercise() {
+		if (!this.editingExerciseId) return;
+		
+		const exercise = this.exercises.find(ex => ex.id === this.editingExerciseId);
+		if (!exercise) return;
+		
+		const name = document.getElementById('exercise-edit-name').value.trim();
+		const muscle = document.getElementById('exercise-edit-muscle').value;
+		const type = document.getElementById('exercise-edit-type').value;
+		const equipment = document.getElementById('exercise-edit-equipment').value;
+		const unit = document.getElementById('exercise-edit-unit').value;
+		const description = document.getElementById('exercise-edit-description').value.trim();
+		
+		if (!name) {
+			this.showToast('Tên bài tập không được để trống', 'error');
+			return;
+		}
+		
+		// Update exercise data
+		exercise.name = name;
+		exercise.muscleGroup = muscle;
+		exercise.type = type;
+		exercise.equipment = equipment;
+		exercise.unit = unit;
+		exercise.description = description;
+		
+		// Update image if changed
+		if (this.tempImageData !== undefined) {
+			exercise.image = this.tempImageData;
+			exercise.imageType = this.tempImageData ? this.tempImageType : null;
+		}
+		
+		exercise.updatedAt = new Date().toISOString();
+		
+		this.saveData('exercises', this.exercises);
+		this.closeEditExerciseModal();
+		this.renderExercises();
+		this.showToast('Đã cập nhật bài tập thành công!', 'success');
+		
+		// Clear temp data
+		this.tempImageData = undefined;
+		this.tempImageType = 'upload';
+	}
 
     // ===== DELETE EXERCISE - FIXED =====
     deleteExercise(exerciseId) {
@@ -1864,31 +2134,133 @@ class GymTracker {
         this.renderExerciseSelection();
         document.getElementById('exercise-select-modal').classList.add('active');
     }
+	renderExerciseSelectList() {
+		const searchTerm = document.getElementById('exercise-select-search').value.toLowerCase();
+		const filteredExercises = this.exercises.filter(ex => 
+			ex.name.toLowerCase().includes(searchTerm)
+		);
+		
+		const listHTML = filteredExercises.map(exercise => {
+			const isSelected = this.selectedExercisesTemp.includes(exercise.id);
+			return `
+				<div class="exercise-select-item ${isSelected ? 'selected' : ''}" data-id="${exercise.id}">
+					<input type="checkbox" class="exercise-checkbox" ${isSelected ? 'checked' : ''}>
+					<div class="exercise-select-thumb">
+						${exercise.image
+							? `<img src="${exercise.image}" alt="${exercise.name}" class="exercise-img-thumb" ...>`
+							: `<div class="exercise-icon">${this.getMuscleIcon(muscle)}</div>`
+						}
+					</div>
+					<div class="exercise-select-info">
+						<div class="exercise-name">${exercise.name}</div>
+						<div class="exercise-muscle">${this.getMuscleGroupName(exercise.muscleGroup)}</div>
+					</div>
+				</div>
+			`;
+		}).join('');
+		
+		document.getElementById('exercise-select-list').innerHTML = listHTML || '<p class="empty-state">Không tìm thấy bài tập nào</p>';
+	}
+	renderExerciseSelection() {
+		const container = document.getElementById('exercise-select-list');
+		container.innerHTML = this.exercises.map(exercise => {
+			const isSelected = this.selectedExerciseIds.includes(exercise.id);
+			const muscle = exercise.muscle || exercise.muscleGroup || 'other';
+			return `
+				<div class="exercise-select-item ${isSelected ? 'selected' : ''}" onclick="app.toggleExerciseSelection('${exercise.id}')">
+					<input type="checkbox" class="exercise-checkbox" ${isSelected ? 'checked' : ''}>
+					<div class="exercise-select-thumb" style="margin-right:12px;">
+						${exercise.image
+							? `<img src="${exercise.image}" alt="${exercise.name || ''}" class="exercise-img-thumb" style="width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid #ccc;">`
+							: `<div class="exercise-icon" style="font-size:1.5em;">${this.getMuscleIcon(muscle)}</div>`
+						}
+					</div>
+					<div class="exercise-info">
+						<div>${exercise.name || '(No name)'}</div>
+						<div class="text-muted">${this.getMuscleName(muscle)}</div>
+					</div>
+				</div>
+			`;
+		}).join('');
+	}
 
-    renderExerciseSelection() {
-        const container = document.getElementById('exercise-select-list');
-        
-        container.innerHTML = this.exercises.map(exercise => {
-            const isSelected = this.selectedExercises.some(ex => ex.id === exercise.id);
-            
-            return `
-                <div class="exercise-select-item ${isSelected ? 'selected' : ''}" 
-                     onclick="app.toggleExerciseSelection('${exercise.id}')">
-                    <input type="checkbox" 
-                           class="exercise-checkbox" 
-                           ${isSelected ? 'checked' : ''}>
-                    <div class="exercise-info">
-                        <div class="exercise-icon">${this.getMuscleIcon(exercise.muscle)}</div>
-                        <div>
-                            <div>${exercise.name}</div>
-                            <div class="text-muted">${this.getMuscleName(exercise.muscle)}</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-    }
+	renderExercises() {
+		const exercises = this.getFilteredExercises();
+		const container = document.getElementById('all-exercises');
+		
+		if (exercises.length === 0) {
+			container.innerHTML = `
+				<div class="empty-state">
+					<div class="empty-icon">🏋️</div>
+					<div class="empty-title">Chưa có bài tập nào</div>
+					<div class="empty-text">Thêm bài tập mới để bắt đầu</div>
+				</div>
+			`;
+			return;
+		}
+		
+		const exercisesHTML = exercises.map(exercise => `
+			<div class="exercise-card" onclick="app.viewExercise('${exercise.id}')">
+				<div class="exercise-image-wrapper">
+					${exercise.image ? 
+						`<img src="${exercise.image}" alt="${exercise.name}" class="exercise-thumbnail" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'exercise-icon\\'>${this.getExerciseIcon(exercise.muscleGroup)}</div>'">` : 
+						`<div class="exercise-icon">${this.getExerciseIcon(exercise.muscleGroup)}</div>`
+					}
+				</div>
+				<div class="exercise-info">
+					<div class="exercise-name">${exercise.name}</div>
+					<div class="exercise-muscle">${this.getMuscleGroupName(exercise.muscleGroup)}</div>
+					<div class="exercise-tags">
+						${exercise.type ? `<span class="exercise-tag">${this.getExerciseTypeIcon(exercise.type)} ${exercise.type}</span>` : ''}
+						${exercise.equipment ? `<span class="exercise-tag">${this.getEquipmentIcon(exercise.equipment)} ${exercise.equipment}</span>` : ''}
+					</div>
+				</div>
+				<div class="exercise-actions" onclick="event.stopPropagation()">
+					<button class="btn-icon" onclick="app.editExercise('${exercise.id}')" title="Chỉnh sửa">
+						<span>✏️</span>
+					</button>
+					<button class="btn-icon" onclick="app.viewExerciseHistory('${exercise.id}')" title="Lịch sử">
+						<span>📊</span>
+					</button>
+					<button class="btn-icon danger" onclick="app.deleteExercise('${exercise.id}')" title="Xóa">
+						<span>🗑️</span>
+					</button>
+				</div>
+			</div>
+		`).join('');
+		
+		container.innerHTML = exercisesHTML;
+	}
+	// Helper function để lấy icon cho exercise type
+	getExerciseTypeIcon(type) {
+		const icons = {
+			'strength': '💪',
+			'bodyweight': '🤸',
+			'cardio': '❤️',
+			'hiit': '🔥',
+			'mobility': '🧘',
+			'stretching': '🤸',
+			'plyometrics': '⚡'
+		};
+		return icons[type] || '🏋️';
+	}
 
+	// Helper function để lấy icon cho equipment
+	getEquipmentIcon(equipment) {
+		const icons = {
+			'bodyweight': '🤸',
+			'barbell': '🏋️',
+			'dumbbell': '🏋️',
+			'machine': '🔧',
+			'cable': '🔗',
+			'weightedbodyweight': '⚖️',
+			'assistedbodyweight': '🤝',
+			'reponly': '🔢',
+			'cardio': '❤️',
+			'duration': '⏱️'
+		};
+		return icons[equipment] || '🏋️';
+	}
     filterExerciseSelection(search) {
         const searchTerm = (search || '').toLowerCase();
         const filtered = this.exercises.filter(exercise => 
@@ -1925,35 +2297,58 @@ class GymTracker {
         }).join('');
     }
 
-    toggleExerciseSelection(exerciseId) {
-        const exercise = this.exercises.find(ex => ex.id === exerciseId);
-        if (!exercise) return;
+	toggleExerciseSelection(exerciseId) {
+		const idx = this.selectedExerciseIds.indexOf(exerciseId);
+		if (idx === -1) {
+			this.selectedExerciseIds.push(exerciseId);
+		} else {
+			this.selectedExerciseIds.splice(idx, 1);
+		}
+		this.renderExerciseSelection();
+	}
+	
+	toggleExerciseSelection(id) {
+		const idx = this.selectedExerciseIds.indexOf(id);
+		if (idx === -1) {
+			this.selectedExerciseIds.push(id);
+		} else {
+			this.selectedExerciseIds.splice(idx, 1);
+		}
+		// Gọi lại renderExerciseSelection chỉ, không reset selectedExercises/selectedIds
+		this.renderExerciseSelection();
+	}
+	confirmExerciseSelection() {
+		// Lấy tất cả bài tập đã tick qua selectedExerciseIds
+		this.selectedExercises = this.exercises
+			.filter(ex => this.selectedExerciseIds.includes(ex.id))
+			.map(ex => ({
+				...ex,
+				// Nếu muốn, khởi tạo lại sets theo logic cũ ở đây, hoặc giữ nguyên
+				sets: ex.sets && Array.isArray(ex.sets) && ex.sets.length > 0
+					? ex.sets.map(set => ({ ...set }))
+					: [
+						{ targetReps: '8-12', restTime: '1:00', completed: false },
+						{ targetReps: '8-12', restTime: '1:00', completed: false },
+						{ targetReps: '8-12', restTime: '1:00', completed: false }
+					],
+			}));
 
-        const index = this.selectedExercises.findIndex(ex => ex.id === exerciseId);
-        if (index >= 0) {
-            this.selectedExercises.splice(index, 1);
-        } else {
-            this.selectedExercises.push({
-                id: exercise.id,
-                name: exercise.name,
-                muscle: exercise.muscle,
-                equipment: exercise.equipment,
-                type: exercise.type,
-                unit: exercise.unit,
-                sets: [
-                    { targetReps: '8-12', restTime: '1:00', completed: false },
-                    { targetReps: '8-12', restTime: '1:00', completed: false },
-                    { targetReps: '8-12', restTime: '1:00', completed: false }
-                ]
-            });
-        }
-        this.filterExerciseSelection(this.exerciseSelectSearchValue || '');
-    }
+		this.closeExerciseSelect();
+		this.renderSelectedExercises();
+	}
+	
+	addExercise(newExercise) {
+		this.exercises.push(newExercise);
+		this.saveData('exercises', this.exercises);
+		this.renderExercises();
+		// Không reload lại từ localStorage ở bước này
+	}
+	openExerciseSelectionModal() {
+		// Chỉ render, không reset selectedExerciseIds
+		this.renderExerciseSelection();
+		document.getElementById('exercise-select-modal').classList.add('active');
+	}
 
-    confirmExerciseSelection() {
-        this.closeExerciseSelect();
-        this.renderSelectedExercises();
-    }
 
     closeExerciseSelect() {
         document.getElementById('exercise-select-modal').classList.remove('active');

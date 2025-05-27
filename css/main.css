@@ -462,6 +462,10 @@ body {
     text-align: center;
     cursor: pointer;
     transition: var(--transition-base);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-start;
 }
 
 .exercise-card:hover {
@@ -893,9 +897,13 @@ body {
 }
 
 .exercise-meta {
-    display: flex; /* */
-    align-items: center; /* */
-    gap: 8px; /* */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+    font-size: 0.9em;
+    color: var(--text-secondary);
 }
 
 .exercise-muscle {
@@ -975,7 +983,7 @@ body {
 
 /* ===== Exercise Actions Menu ===== */
 .btn-ex-action {
-    background: none; /* */
+	background: none; /* */
     border: none; /* */
     font-size: 1.3rem; /* */
     color: var(--text-secondary); /* */
@@ -988,6 +996,7 @@ body {
     justify-content: center; /* */
     width: 32px; /* */
     height: 32px; /* */
+	z-index: 1;
 }
 
 .btn-ex-action:hover {
@@ -1005,7 +1014,7 @@ body {
     border: 1px solid var(--border-color);
     border-radius: 12px;
     box-shadow: 0 4px 24px rgba(0,0,0,0.15);
-    z-index: var(--z-exercise-menu) !important; /* Sử dụng z-index cao hơn rest timer */
+    z-index: 2147483647 !important; /* Sử dụng z-index cao hơn rest timer */
     padding: 8px 0;
     display: none;
     flex-direction: column;
@@ -1158,7 +1167,31 @@ body {
 .set-block.set-completed .set-row {
     border-bottom: none; /* */
 }
+.set-row,
 
+.set-row-header {
+    gap: 16px;
+}
+
+.set-row-header > div {
+    justify-content: center !important;
+    align-items: center !important;
+    display: flex !important;
+}
+
+.set-number { flex: 0 0 48px; text-align: center; }
+.set-weight,
+.set-reps,
+.set-rest {
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.set-number { flex: 0.7 1 0; }
+.set-weight, .set-reps, .set-rest { flex: 1 1 0; min-width: 60px; text-align: center; }
+.set-actions { flex: 0 0 44px; display: flex; justify-content: center; }
 .set-block.set-completed input,
 .set-block.set-completed input[type="number"] {
     color: #fff !important; /* */
@@ -1167,7 +1200,16 @@ body {
     border-color: rgba(255,255,255,0.3) !important; /* */
     caret-color: #fff !important; /* */
 }
-
+.set-input {
+    text-align: center;
+    display: block;
+    margin: 0 auto;
+}
+.set-cell-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 .set-block.set-completed input::placeholder {
     color: rgba(255,255,255,0.7) !important; /* */
     opacity: 1; /* */
@@ -2294,4 +2336,466 @@ body {
 .pr-text {
     font-size: 1.5rem;
     font-weight: 700;
+}
+/* ===== FIX MENU ICON OVERLAP ISSUE ===== */
+/* Thêm CSS này vào cuối file css/main.css */
+
+/* ✅ FIXED: Z-index hierarchy cho exercise menu */
+.exercise-menu {
+    position: absolute !important;
+    top: 36px !important;
+    right: 0 !important;
+    min-width: 220px !important;
+    
+    /* ✅ Z-index CỰC CAO để luôn hiện trên tất cả */
+    z-index: 999999 !important;
+    
+    background: #2a2a2a !important;
+    border: 1px solid #4a4a4a !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
+    
+    padding: 8px 0 !important;
+    display: none !important;
+    flex-direction: column !important;
+    
+    /* ✅ Đảm bảo menu luôn ở trên */
+    transform: translateZ(0) !important;
+    will-change: transform !important;
+}
+
+/* ✅ FIXED: Menu khi positioned fixed */
+.exercise-menu.positioned {
+    position: fixed !important;
+    z-index: 2147483647 !important; /* Max z-index value */
+    background: #2a2a2a !important;
+    border: 1px solid #4a4a4a !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6) !important;
+}
+
+/* ✅ FIXED: Đảm bảo các icon buttons có z-index thấp hơn menu */
+.btn-ex-action {
+    z-index: 1 !important;
+    position: relative !important;
+}
+
+/* ✅ FIXED: Exercise actions container */
+.exercise-actions {
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* ✅ FIXED: Tất cả edit icons/buttons phải có z-index thấp hơn menu */
+.exercise-card .btn,
+.exercise-card button,
+.template-card .btn,
+.template-card button,
+.workout-exercise .btn,
+.workout-exercise button {
+    z-index: 1 !important;
+}
+
+/* ✅ FIXED: Edit icon không được đè lên menu */
+.exercise-card .exercise-actions button,
+.template-card .exercise-actions button {
+    z-index: 1 !important;
+    position: relative !important;
+}
+
+/* ✅ BACKUP: Nếu menu vẫn bị che, dùng backdrop */
+.menu-backdrop {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: rgba(0,0,0,0.1) !important;
+    z-index: 999998 !important;
+    display: none !important;
+}
+
+.menu-backdrop.active {
+    display: block !important;
+}
+
+/* ✅ ADDITIONAL: Đảm bảo menu buttons hoạt động */
+.exercise-menu button {
+    background: none !important;
+    border: none !important;
+    width: 100% !important;
+    padding: 12px 16px !important;
+    text-align: left !important;
+    color: #ffffff !important;
+    font-size: 0.9rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    cursor: pointer !important;
+    transition: all 0.15s !important;
+    z-index: inherit !important;
+    position: relative !important;
+}
+
+.exercise-menu button:hover {
+    background: #4CAF50 !important;
+    color: #ffffff !important;
+    transform: translateX(2px) !important;
+}
+
+/* ✅ CRITICAL: Override tất cả z-index conflicts */
+*[class*="edit"], 
+*[class*="icon"], 
+*[class*="btn"]:not(.exercise-menu *) {
+    z-index: 1 !important;
+}
+
+/* ✅ ENSURE: Menu luôn ở trên khi hiển thị */
+.exercise-menu[style*="display: block"],
+.exercise-menu[style*="display: flex"] {
+    z-index: 2147483647 !important;
+    position: fixed !important;
+}
+
+/* ✅ MOBILE FIX: Menu positioning trên mobile */
+@media (max-width: 480px) {
+    .exercise-menu {
+        right: -10px !important;
+        z-index: 2147483647 !important;
+    }
+    
+    .exercise-menu.positioned {
+        z-index: 2147483647 !important;
+    }
+}
+
+/* ✅ DEBUGGING: Highlight menu boundary (remove sau khi fix) */
+/*
+.exercise-menu {
+    border: 2px solid red !important;
+    background: yellow !important;
+}
+*/
+
+/* Exercise Image Upload Styles */
+.image-upload-area {
+    margin-top: 8px;
+}
+.image-preview-container {
+    width: 100%;
+    min-height: 200px;
+    border: 2px dashed var(--border-color);
+    border-radius: var(--radius-lg);
+    background: var(--bg-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+.image-preview-container:hover {
+    border-color: var(--primary);
+    background: var(--bg-secondary);
+}
+.upload-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+    cursor: pointer;
+    padding: var(--spacing-xl);
+    color: var(--text-secondary);
+}
+.upload-icon {
+    font-size: 3rem;
+    opacity: 0.5;
+}
+.upload-text {
+    font-size: 0.9rem;
+}
+.image-preview-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    cursor: pointer;
+}
+.image-preview-container.has-image .upload-placeholder {
+    display: none;
+}
+.preview-image-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+.remove-image-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--danger);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.2rem;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    transition: all 0.2s;
+}
+.remove-image-btn:hover {
+    transform: scale(1.1);
+    background: #d32f2f;
+}
+/* Image input tabs */
+.image-input-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 12px;
+    background: var(--bg-tertiary);
+    padding: 4px;
+    border-radius: var(--radius-md);
+}
+.tab-btn {
+    flex: 1;
+    padding: 8px 16px;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.tab-btn:hover {
+    background: var(--bg-secondary);
+}
+.tab-btn.active {
+    background: var(--primary);
+    color: white;
+}
+.image-tab {
+    display: none;
+}
+.image-tab.active {
+    display: block;
+}
+/* URL input */
+.url-input-wrapper {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+.url-input-wrapper .form-input {
+    flex: 1;
+}
+.url-input-wrapper .btn {
+    padding: 8px 16px;
+}
+/* Loading state */
+.image-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 40px;
+    color: var(--text-secondary);
+}
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border-color);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+/* Error state */
+.image-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 40px;
+    color: var(--danger);
+}
+.error-icon {
+    font-size: 3rem;
+}
+/* Exercise Card with Image */
+.exercise-image-wrapper {
+    width: 100%;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    overflow: hidden;
+    margin: -var(--spacing-md) -var(--spacing-md) var(--spacing-md) -var(--spacing-md);
+}
+.exercise-thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+.exercise-card:hover .exercise-thumbnail {
+    transform: scale(1.05);
+}
+.exercise-card .exercise-icon {
+    font-size: 3rem;
+    opacity: 0.8;
+}
+/* Exercise selection modal with images */
+.exercise-select-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+.exercise-select-thumbnail {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: var(--bg-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.exercise-select-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.exercise-select-thumbnail .exercise-icon {
+    font-size: 1.5rem;
+}
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .image-preview-container {
+        min-height: 150px;
+    }
+    .exercise-image-wrapper {
+        height: 100px;
+    }
+    .image-input-tabs {
+        margin-bottom: 8px;
+    }
+    .tab-btn {
+        font-size: 0.85rem;
+        padding: 6px 12px;
+    }
+}
+/* Image wrapper for exercise card */
+.exercise-image-wrapper {
+    width: 100%;
+    height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-tertiary);
+    overflow: hidden;
+    position: relative;
+}
+
+.exercise-thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.exercise-card:hover .exercise-thumbnail {
+    transform: scale(1.05);
+}
+
+/* Exercise icon when no image */
+.exercise-image-wrapper .exercise-icon {
+    font-size: 3.5rem;
+    opacity: 0.6;
+}
+
+/* Exercise info section */
+.exercise-info {
+    padding: var(--spacing-md);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.exercise-name {
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: var(--spacing-xs);
+    color: var(--text-primary);
+}
+
+.exercise-muscle {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-xs);
+}
+
+/* Exercise tags */
+.exercise-tags {
+    display: flex;
+    gap: var(--spacing-xs);
+    flex-wrap: wrap;
+    margin-top: auto;
+}
+
+.exercise-tag {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-full);
+    color: var(--text-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.exercise-actions .btn-icon {
+    flex: 1;
+    padding: var(--spacing-xs);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+.exercise-actions .btn-icon:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    transform: translateY(-1px);
+}
+
+.exercise-actions .btn-icon:hover span {
+    filter: grayscale(0) brightness(1.2);
+}
+
+.exercise-actions .btn-icon.danger:hover {
+    background: var(--danger);
+    border-color: var(--danger);
+}
+
+/* Grid layout adjustment */
+.exercises-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: var(--spacing-lg);
 }
