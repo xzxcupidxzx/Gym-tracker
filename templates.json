@@ -1,0 +1,78 @@
+[
+  {
+    "id": "tpl_1",
+    "name": "Full Body Strength",
+    "level": "beginner",
+    "duration": 60,
+    "exercises": [
+      {
+        "id": "11",
+        "name": "Squat",
+        "muscle": "legs",
+        "sets": [
+          { "targetReps": "8-12", "restTime": "1:30" },
+          { "targetReps": "8-12", "restTime": "1:30" },
+          { "targetReps": "8-12", "restTime": "1:30" }
+        ]
+      },
+      {
+        "id": "1",
+        "name": "Bench Press",
+        "muscle": "chest",
+        "sets": [
+          { "targetReps": "8-12", "restTime": "1:30" },
+          { "targetReps": "8-12", "restTime": "1:30" },
+          { "targetReps": "8-12", "restTime": "1:30" }
+        ]
+      },
+      {
+        "id": "9",
+        "name": "Barbell Rows",
+        "muscle": "back",
+        "sets": [
+          { "targetReps": "8-12", "restTime": "1:30" },
+          { "targetReps": "8-12", "restTime": "1:30" },
+          { "targetReps": "8-12", "restTime": "1:30" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tpl_2",
+    "name": "Push Day",
+    "level": "intermediate",
+    "duration": 75,
+    "exercises": [
+       {
+        "id": "2",
+        "name": "Incline Dumbbell Press",
+        "muscle": "chest",
+        "sets": [
+          { "targetReps": "10-15", "restTime": "1:00" },
+          { "targetReps": "10-15", "restTime": "1:00" },
+          { "targetReps": "10-15", "restTime": "1:00" }
+        ]
+      },
+      {
+        "id": "16",
+        "name": "Overhead Press",
+        "muscle": "shoulders",
+        "sets": [
+          { "targetReps": "8-12", "restTime": "1:30" },
+          { "targetReps": "8-12", "restTime": "1:30" },
+          { "targetReps": "8-12", "restTime": "1:30" }
+        ]
+      },
+      {
+        "id": "25",
+        "name": "Close-Grip Bench Press",
+        "muscle": "arms",
+        "sets": [
+          { "targetReps": "10-15", "restTime": "1:00" },
+          { "targetReps": "10-15", "restTime": "1:00" },
+          { "targetReps": "10-15", "restTime": "1:00" }
+        ]
+      }
+    ]
+  }
+]
