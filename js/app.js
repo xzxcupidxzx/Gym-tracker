@@ -155,76 +155,62 @@ class GymTracker {
         });
     }
 
-    // ===== MENU FUNCTIONS - FIXED =====
-    toggleExerciseMenu(event, exIndex) {
+    // ===== MENU FUNCTIONS - FINAL FIXED VERSION =====
+    toggleExerciseMenu(event, context, exIndex) {
         event.preventDefault();
         event.stopPropagation();
-        
-        const menuId = `edit-menu-${exIndex}`;
-        const menu = document.getElementById(menuId);
+        this.closeAllMenus(); // Luôn đóng các menu khác trước khi mở menu mới
+
+        const originalMenuId = `edit-menu-${context}-${exIndex}`;
+        const originalMenu = document.getElementById(originalMenuId);
         const button = event.target.closest('.btn-ex-action');
-        
-        if (!menu || !button) {
-            console.error(`Menu or button not found for index ${exIndex}`);
+
+        if (!originalMenu || !button) {
+            console.error(`Original menu template not found for context '${context}', index ${exIndex}`);
             return;
         }
+
+        // Tạo một menu tạm thời để hiển thị, tránh di chuyển menu gốc
+        const activeMenu = document.createElement('div');
+        activeMenu.className = 'exercise-menu active-menu-instance'; // Class để nhận diện và xóa sau
+        activeMenu.innerHTML = originalMenu.innerHTML; // Sao chép các nút từ menu gốc
+
+        // Gắn menu tạm thời vào body để nó luôn nổi lên trên cùng
+        document.body.appendChild(activeMenu);
+
+        // Định vị menu tạm thời ngay cạnh nút đã bấm
+        const buttonRect = button.getBoundingClientRect();
+        const menuWidth = activeMenu.offsetWidth || 220;
+        const menuHeight = activeMenu.offsetHeight || 300;
         
-        // Close all other menus first
-        this.closeAllMenus();
+        let top = buttonRect.bottom + 5;
+        let left = buttonRect.right - menuWidth;
+
+        // Điều chỉnh để menu không bị ra ngoài màn hình
+        if (left < 10) left = 10;
+        if (left + menuWidth > window.innerWidth) left = window.innerWidth - menuWidth - 10;
+        if (top + menuHeight > window.innerHeight) top = buttonRect.top - menuHeight - 5;
+        if (top < 10) top = 10;
+
+        activeMenu.style.position = 'fixed';
+        activeMenu.style.top = `${top}px`;
+        activeMenu.style.left = `${left}px`;
+        activeMenu.style.zIndex = '10001';
         
-        // Toggle current menu
-        const isVisible = menu.style.display === 'block';
+        // Tạo một lớp phủ (backdrop) trong suốt để bắt sự kiện click ra ngoài
+        const backdrop = document.createElement('div');
+        backdrop.className = 'menu-backdrop';
+        backdrop.onclick = () => this.closeAllMenus();
+        document.body.appendChild(backdrop);
         
-        if (!isVisible) {
-            // Show menu
-            menu.style.display = 'block';
-            
-            // Position menu
-            const buttonRect = button.getBoundingClientRect();
-            const menuWidth = 200;
-            const menuHeight = menu.offsetHeight || 300;
-            
-            let menuTop = buttonRect.bottom + 5;
-            let menuLeft = buttonRect.right - menuWidth;
-            
-            // Adjust for viewport boundaries
-            if (menuLeft < 10) menuLeft = 10;
-            if (menuLeft + menuWidth > window.innerWidth - 10) {
-                menuLeft = window.innerWidth - menuWidth - 10;
-            }
-            if (menuTop + menuHeight > window.innerHeight - 10) {
-                menuTop = buttonRect.top - menuHeight - 5;
-            }
-            if (menuTop < 10) menuTop = 10;
-            
-            // Apply positioning with high z-index
-            menu.style.position = 'fixed';
-            menu.style.top = `${menuTop}px`;
-            menu.style.left = `${menuLeft}px`;
-            menu.style.zIndex = '10000';
-            
-            // Add backdrop
-            const backdrop = document.createElement('div');
-            backdrop.className = 'menu-backdrop';
-            backdrop.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;';
-            backdrop.onclick = () => this.closeAllMenus();
-            document.body.appendChild(backdrop);
-            
-            // Prevent menu clicks from closing menu
-            menu.onclick = (e) => e.stopPropagation();
-        }
+        // Ngăn việc click vào menu làm menu tự đóng
+        activeMenu.onclick = (e) => e.stopPropagation();
     }
 
     closeAllMenus() {
-        // Close all menus
-        document.querySelectorAll('.exercise-menu').forEach(menu => {
-            menu.style.display = 'none';
-        });
-        
-        // Remove all backdrops
-        document.querySelectorAll('.menu-backdrop').forEach(backdrop => {
-            backdrop.remove();
-        });
+        // Tìm và xóa tất cả các menu tạm thời và backdrop đang hoạt động
+        document.querySelectorAll('.active-menu-instance').forEach(menu => menu.remove());
+        document.querySelectorAll('.menu-backdrop').forEach(backdrop => backdrop.remove());
     }
 
     // ===== PAGE NAVIGATION =====
@@ -1440,10 +1426,10 @@ class GymTracker {
                     <div class="workout-exercise-header">
                         <span class="workout-exercise-name">${exercise.name}</span>
                         <div class="exercise-actions">
-                            <button class="btn-ex-action" onclick="app.toggleExerciseMenu(event, ${exIndex})" title="Menu">
-                                <span class="menu-icon">⋯</span>
-                            </button>
-                            <div class="exercise-menu" id="edit-menu-${exIndex}" style="display:none;">
+							<button class="btn-ex-action" onclick="app.toggleExerciseMenu(event, 'workout', ${exIndex})" title="Menu">
+								<span class="menu-icon">⋯</span>
+							</button>
+							<div class="exercise-menu" id="edit-menu-workout-${exIndex}">
                                 <button onclick="app.addExerciseNote(${exIndex})">📝 Add Note</button>
                                 <button onclick="app.addExerciseSticky(${exIndex})">📌 Add Sticky Note</button>
                                 <button onclick="app.addWarmupSet(${exIndex})">➕ Add Warm-up Sets</button>
@@ -2162,23 +2148,23 @@ class GymTracker {
                                 ${exIndex === (this.selectedExercises.length-1) ? 'disabled style="opacity:0.5;"' : ''}>
                                 ⬇️
                             </button>
-                            <button class="btn-ex-action"
-                                onclick="app.toggleExerciseMenu(event, ${exIndex})"
-                                title="Tùy chọn">
-                                <span class="menu-icon">⋯</span>
-                            </button>
+							<button class="btn-ex-action"
+								onclick="app.toggleExerciseMenu(event, 'template', ${exIndex})"
+								title="Tùy chọn">
+								<span class="menu-icon">⋯</span>
+							</button>
 
-                            <div class="exercise-menu" id="edit-menu-${exIndex}" style="display:none;z-index:1051;right:0;top:36px;position:absolute;">
-                                <button onclick="app.addNoteToTemplateExercise(${exIndex})">📝 Ghi chú</button>
-                                <button onclick="app.addStickyToTemplateExercise(${exIndex})">📌 Sticky Note</button>
-                                <button onclick="app.addWarmupSetToTemplate(${exIndex})">➕ Thêm Warm-up Set</button>
-                                <button onclick="app.updateRestTimersTemplate(${exIndex})">⏱️ Update Rest Timers</button>
-                                <button onclick="app.replaceExerciseInTemplate(${exIndex})">🔄 Replace Exercise</button>
-                                <button onclick="app.createSupersetInTemplate(${exIndex})">⎯⎯ Create Superset</button>
-                                <button onclick="app.exercisePreferencesTemplate(${exIndex}, event)">⚙️ Preferences</button>
-                                <button onclick="app.duplicateExercise(${exIndex})">📋 Nhân đôi</button>
-                                <button class="danger" onclick="app.removeSelectedExercise(${exIndex})">❌ Xóa bài</button>
-                            </div>
+							<div class="exercise-menu" id="edit-menu-template-${exIndex}">
+								<button onclick="app.addNoteToTemplateExercise(${exIndex})">📝 Ghi chú</button>
+								<button onclick="app.addStickyToTemplateExercise(${exIndex})">📌 Sticky Note</button>
+								<button onclick="app.addWarmupSetToTemplate(${exIndex})">➕ Thêm Warm-up Set</button>
+								<button onclick="app.updateRestTimersTemplate(${exIndex})">⏱️ Update Rest Timers</button>
+								<button onclick="app.replaceExerciseInTemplate(${exIndex})">🔄 Replace Exercise</button>
+								<button onclick="app.createSupersetInTemplate(${exIndex})">⎯⎯ Create Superset</button>
+								<button onclick="app.exercisePreferencesTemplate(${exIndex}, event)">⚙️ Preferences</button>
+								<button onclick="app.duplicateExercise(${exIndex})">📋 Nhân đôi</button>
+								<button class="danger" onclick="app.removeSelectedExercise(${exIndex})">❌ Xóa bài</button>
+							</div>
                         </div>
                     </div>
                     ${noteHtml}
