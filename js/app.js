@@ -172,13 +172,27 @@ class GymTracker {
 
         // Tạo một menu tạm thời để hiển thị, tránh di chuyển menu gốc
         const activeMenu = document.createElement('div');
-        activeMenu.className = 'exercise-menu active-menu-instance'; // Class để nhận diện và xóa sau
-        activeMenu.innerHTML = originalMenu.innerHTML; // Sao chép các nút từ menu gốc
+        activeMenu.className = 'exercise-menu active-menu-instance';
+        activeMenu.innerHTML = originalMenu.innerHTML;
+        
+        // Style cho menu
+        activeMenu.style.cssText = `
+            position: fixed;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            padding: var(--spacing-sm) 0;
+            min-width: 200px;
+            display: flex;
+            flex-direction: column;
+            z-index: 10001;
+        `;
 
-        // Gắn menu tạm thời vào body để nó luôn nổi lên trên cùng
+        // Gắn menu tạm thời vào body
         document.body.appendChild(activeMenu);
 
-        // Định vị menu tạm thời ngay cạnh nút đã bấm
+        // Định vị menu
         const buttonRect = button.getBoundingClientRect();
         const menuWidth = activeMenu.offsetWidth || 220;
         const menuHeight = activeMenu.offsetHeight || 300;
@@ -192,14 +206,21 @@ class GymTracker {
         if (top + menuHeight > window.innerHeight) top = buttonRect.top - menuHeight - 5;
         if (top < 10) top = 10;
 
-        activeMenu.style.position = 'fixed';
         activeMenu.style.top = `${top}px`;
         activeMenu.style.left = `${left}px`;
-        activeMenu.style.zIndex = '10001';
         
         // Tạo một lớp phủ (backdrop) trong suốt để bắt sự kiện click ra ngoài
         const backdrop = document.createElement('div');
         backdrop.className = 'menu-backdrop';
+        backdrop.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 10000;
+            background: transparent;
+        `;
         backdrop.onclick = () => this.closeAllMenus();
         document.body.appendChild(backdrop);
         
