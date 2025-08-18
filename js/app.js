@@ -21,6 +21,26 @@ function playDone() {
 
 // ===== MAIN APP CLASS =====
 class GymTracker {
+
+        adjustWorkoutHeight() {
+            try{
+                const modal = document.getElementById('workout-modal');
+                if (!modal || !modal.classList.contains('active')) return;
+                const header = modal.querySelector('.modal-header');
+                const footer = modal.querySelector('.modal-footer');
+                const hH = header ? header.offsetHeight : 0;
+                const fH = footer ? footer.offsetHeight : 0;
+                document.documentElement.style.setProperty('--header-h', hH + 'px');
+                document.documentElement.style.setProperty('--footer-h', fH + 'px');
+                const ex = document.getElementById('workout-exercises');
+                if (ex) {
+                    ex.style.height = `calc(var(--vh) * 100 - ${hH}px - ${fH}px)`;
+                    ex.style.maxHeight = ex.style.height;
+                }
+            } catch(e){}
+        }
+
+
     constructor() {
         // State variables
         this.currentPage = 'home';
@@ -622,6 +642,67 @@ class GymTracker {
         // Clear temp data
         this.tempImageData = null;
         this.tempImageType = 'upload';
+    }
+
+    addExerciseToLibrary(ext) {
+        try {
+            if (!ext) return;
+            const mapMuscle = (catName='') => {
+                const t = String(catName||'').toLowerCase();
+                if (t.includes('chest')) return 'chest';
+                if (t.includes('back')) return 'back';
+                if (t.includes('bicep')) return 'biceps';
+                if (t.includes('tricep')) return 'triceps';
+                if (t.includes('shoulder')) return 'shoulders';
+                if (t.includes('abs') || t.includes('abdominal') || t.includes('core')) return 'abs';
+                if (t.includes('hamstring')) return 'hamstrings';
+                if (t.includes('quad')) return 'quads';
+                if (t.includes('glute')) return 'glutes';
+                if (t.includes('calf')) return 'calves';
+                if (t.includes('leg')) return 'legs';
+                if (t.includes('forearm')) return 'forearms';
+                if (t.includes('neck')) return 'neck';
+                if (t.includes('cardio')) return 'cardio';
+                return 'other';
+            };
+            const firstImg = (ext.images && ext.images.length)
+                ? (ext.images[0].image || ext.images[0].url || null)
+                : (ext.image || null);
+            const equip = (ext.equipment && ext.equipment.length)
+                ? (ext.equipment[0].name || 'Unknown')
+                : (ext.equipment || 'Bodyweight');
+
+            const newEx = {
+                id: this.generateId(),
+                name: ext.name || 'Unnamed',
+                muscle: mapMuscle(ext.category && (ext.category.name || ext.category)),
+                type: 'strength',
+                equipment: equip || 'N/A',
+                unit: 'kg',
+                description: (ext.description && typeof ext.description === 'string')
+                    ? ext.description.replace(/<[^>]*>/g,'').trim()
+                    : (ext.description || ''),
+                image: firstImg || null,
+                imageType: firstImg ? 'url' : null,
+                custom: true,
+                source: 'wger',
+                createdAt: new Date().toISOString()
+            };
+
+            const exists = (this.exercises || []).some(e => e.name?.toLowerCase?.() === newEx.name.toLowerCase());
+            if (!exists) {
+                this.exercises.push(newEx);
+                this.saveData('exercises', this.exercises);
+                this.renderAllExercises && this.renderAllExercises();
+                this.updateExerciseStats && this.updateExerciseStats();
+                this.showToast && this.showToast(`Đã thêm "${newEx.name}" vào thư viện`, 'success');
+            } else {
+                this.showToast && this.showToast(`"${newEx.name}" đã có trong thư viện`, 'warning');
+            }
+        } catch (e) {
+            console.error('addExerciseToLibrary failed', e);
+            this.showToast && this.showToast('Không import được bài tập.', 'error');
+        }
     }
 
     // ===== IMAGE HANDLING =====
@@ -1378,6 +1459,7 @@ class GymTracker {
                     <div class="set-weight">${unitLabel}</div>
                     <div class="set-reps">${repsLabel}</div>
                     <div class="set-complete">✓</div>
+                    <div class="set-actions"></div>
                 </div>
             `;
 
@@ -1403,7 +1485,11 @@ class GymTracker {
                                     ${set.completed ? 'checked' : ''}
                                     onchange="app.toggleSetComplete(${exIndex},${setIndex})">
                             </div>
-                        </div>
+                        
+                            <div class="set-actions">
+                                <button class="btn-icon btn-danger" title="Xóa set" onclick="app.removeSet(${exIndex},${setIndex})">🗑️</button>
+                            </div>
+    </div>
                         ${
                             setIndex < exercise.sets.length - 1
                             ? `
@@ -1469,7 +1555,9 @@ class GymTracker {
                 </div>
             `;
         });
-    }
+    
+        requestAnimationFrame(()=> this.adjustWorkoutHeight());
+}
 
     // ===== WORKOUT CONTROLS =====
     updateSet(exIndex, setIndex, field, value) {
@@ -1504,6 +1592,32 @@ class GymTracker {
 
         this.saveData('currentWorkout', this.currentWorkout);
     }
+
+    
+        removeSet(exIndex, setIndex) {
+            try {
+                const ex = this.currentWorkout?.exercises?.[exIndex];
+                if (!ex) return;
+                if (ex.sets.length <= 1) {
+                    const ok = confirm('Bài này chỉ còn 1 set. Xoá set này sẽ xoá luôn bài tập khỏi buổi tập. Tiếp tục?');
+                    if (!ok) return;
+                    this.currentWorkout.exercises.splice(exIndex, 1);
+                } else {
+                    ex.sets.splice(setIndex, 1);
+                }
+                if (this.setRestIntervals) {
+                    Object.keys(this.setRestIntervals).forEach(k => {
+                        if (k.startsWith(`${exIndex}-`)) {
+                            clearInterval(this.setRestIntervals[k]);
+                            delete this.setRestIntervals[k];
+                        }
+                    });
+                }
+                this.saveData('currentWorkout', this.currentWorkout);
+                this.renderWorkoutExercises();
+            } catch(e){ console.warn('removeSet error', e); }
+        }
+
 
     addSet(exIndex) {
         this.currentWorkout.exercises[exIndex].sets.push({
@@ -2962,6 +3076,8 @@ window.addEventListener('scroll', function() {
 try {
     const app = new GymTracker();
     window.app = app;
+window.addEventListener('resize', ()=> app.adjustWorkoutHeight && app.adjustWorkoutHeight());
+window.addEventListener('orientationchange', ()=> app.adjustWorkoutHeight && app.adjustWorkoutHeight());
     console.log('✅ Gym Tracker initialized successfully');
     
     // Auto-save functionality

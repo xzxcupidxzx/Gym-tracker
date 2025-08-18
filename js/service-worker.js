@@ -5,15 +5,16 @@ const RUNTIME_CACHE = 'gym-tracker-runtime';
 
 // Files to cache
 const STATIC_CACHE_URLS = [
-  '/',
-  '/index.html',
-  '/css/main.css',
-  '/js/app.js',
-  '/js/backend.js',
-  '/js/analytics.js',
-  '/js/ai.js',
-  '/manifest.json',
-  '/offline.html'
+  '../index.html',
+  '../css/main.css',
+  '../js/app.js',
+  '../js/backend.js',
+  '../js/analytics.js',
+  '../js/ai.js',
+  '../manifest.json',
+  '../offline.html',
+  '../exercises.json',
+  '../templates.json'
 ];
 
 // Install event - cache static assets

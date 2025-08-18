@@ -2035,3 +2035,36 @@ html, body {
         font-size: 16px !important;
     }
 }
+/* === Fullscreen Workout Modal (incl. iOS Safari) === */
+:root{ --vh: 1vh; --header-h:56px; --footer-h:64px; }
+#workout-modal { position: fixed !important; inset: 0 !important; display: none; background: var(--bg-primary,#0f0f0f); z-index: 9999 !important; }
+#workout-modal.active { display: flex !important; align-items: stretch !important; justify-content: stretch !important; }
+#workout-modal .modal-overlay { display:none !important; }
+#workout-modal .modal-content,
+#workout-modal .modal-content.workout-modal {
+  width: 100vw !important; max-width: 100vw !important;
+  height: 100vh; height: 100svh; height: 100dvh; height: calc(var(--vh) * 100);
+  max-height: calc(var(--vh) * 100);
+  border-radius: 0 !important; box-shadow: none !important; margin: 0 !important;
+  display: grid; grid-template-rows: auto 1fr auto;
+}
+#workout-modal .modal-header{ padding-top: calc(8px + env(safe-area-inset-top)); }
+#workout-modal .modal-footer{ padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+#workout-modal .modal-close { display:none !important; }
+#workout-modal .modal-body{ height:auto !important; overflow:hidden; }
+
+/* Exercises scroller fills leftover height */
+#workout-exercises{
+  height: calc(var(--vh) * 100 - var(--header-h) - var(--footer-h));
+  max-height: calc(var(--vh) * 100 - var(--header-h) - var(--footer-h));
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+}
+
+/* Actions column & delete button */
+.set-actions { flex: 0 0 44px; display:flex; justify-content:center; align-items:center; }
+.btn-icon { background: var(--bg-tertiary,#1a1a1a); border:1px solid var(--border-color,#333); border-radius:10px; padding:6px 8px; line-height:1; cursor:pointer; transition: transform .08s, background .18s; }
+.btn-icon:hover { background: var(--bg-elevated,#222); transform: translateY(-1px); }
+.btn-danger { color:#ff6b6b; border-color:#ff6b6b33; }
+.btn-danger:hover { background:#ff6b6b22; }
+
+@media (max-width: 420px){ .set-previous{ display:none; } }

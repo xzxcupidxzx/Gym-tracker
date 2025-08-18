@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
+<script>window.app = window.app || {};</script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
     <title>Gym Tracker - Quản lý tập luyện thông minh</title>
     <meta name="description" content="Ứng dụng theo dõi và quản lý tập luyện gym với AI">
     <meta name="theme-color" content="#4CAF50">
@@ -11,16 +12,28 @@
     <meta name="apple-mobile-web-app-title" content="Gym Tracker">
 
     <!-- PWA -->
-    <link rel="manifest" href="/manifest.json">
-    <link rel="icon" type="image/x-icon" href="/icon/favicon.ico">
-    <link rel="icon" type="image/png" sizes="96x96" href="/icon/Gym-favicon-96x96.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="/icon/Gym-192x192.png">
-    <link rel="apple-touch-icon" href="/icon/Gym-apple-touch-icon.png">
+<link rel="icon" type="image/x-icon" href="icon/favicon.ico">
+    <link rel="icon" type="image/png" sizes="96x96" href="icon/Gym-favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon/Gym-192x192.png">
+    <link rel="apple-touch-icon" href="icon/Gym-apple-touch-icon.png">
     <link rel="stylesheet" href="css/main.css">
     
     <!-- Chart.js Preload (cho analytics) -->
 	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+
+<script>
+(function(){
+  function setVh(){
+    var vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', vh + 'px');
+  }
+  setVh();
+  window.addEventListener('resize', setVh);
+  window.addEventListener('orientationchange', setVh);
+})();
+</script>
+
 </head>
 <body>
     <audio id="sound-beep" src="sounds/beep.mp3" preload="auto"></audio>
@@ -108,7 +121,7 @@
                     <div class="stat-card"><div class="stat-icon">💪</div><div class="stat-content"><div class="stat-value" id="total-volume">0</div><div class="stat-label">Tổng KG</div></div></div>
                 </div>
                 <div class="quick-actions">
-                    <button class="quick-action-btn primary" onclick="app.startQuickWorkout()">
+                    <button class="quick-action-btn primary" onclick="window.app&&app.startQuickWorkout?app.startQuickWorkout():alert('Ứng dụng chưa khởi tạo xong. Hãy tải lại trang.')">
                         <span class="btn-icon">🚀</span>
                         <span class="btn-text">Bắt đầu tập</span>
                     </button>
@@ -116,7 +129,7 @@
                         <span class="btn-icon">🤖</span>
                         <span class="btn-text">AI Suggest</span>
                     </button>
-                    <button class="quick-action-btn" onclick="app.createTemplate()">
+                    <button class="quick-action-btn" onclick="app.createTemplate()" title="Tạo template">
                         <span class="btn-icon">➕</span>
                         <span class="btn-text">Tạo template</span>
                     </button>
@@ -142,15 +155,12 @@
                 <div class="page-header">
                     <h2 class="page-title">📋 Templates</h2>
                     <div class="header-actions">
-                        <button class="btn btn-primary" onclick="app.createTemplate()">
-                            <span class="btn-icon">➕</span>Tạo template
-                        </button>
-                        <button class="btn btn-secondary" onclick="document.getElementById('import-template-file').click()">
-                            <span class="btn-icon">📥</span>Import
-                        </button>
-                        <button class="btn btn-secondary" onclick="app.exportTemplates()">
-                            <span class="btn-icon">📤</span>Export
-                        </button>
+                        <button class="btn btn-primary" onclick="app.createTemplate()" title="Tạo template">
+                            <span class="btn-icon">➕</span></button>
+                        <button class="btn btn-secondary" onclick="document.getElementById('import-template-file').click()" title="Import template (JSON)">
+                            <span class="btn-icon">📥</span></button>
+                        <button class="btn btn-secondary" onclick="app.exportTemplates()" title="Export templates">
+                            <span class="btn-icon">📤</span></button>
                     </div>
                 </div>
                 
@@ -375,8 +385,8 @@
                     <h2 class="page-title">📅 Lịch sử tập luyện</h2>
                     <div class="header-actions">
                         <input type="file" id="import-file" accept=".json" style="display:none;" onchange="app.handleImportFile(event)">
-                        <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()"><span class="btn-icon">📥</span>Import</button>
-                        <button class="btn btn-secondary" onclick="app.exportData()"><span class="btn-icon">📤</span>Export</button>
+                        <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()" title="Import (JSON)"><span class="btn-icon">📥</span></button>
+                        <button class="btn btn-secondary" onclick="app.exportData()" title="Export (JSON)"><span class="btn-icon">📤</span></button>
                     </div>
                 </div>
                 <div class="view-toggle">
@@ -934,7 +944,7 @@
     <!-- PWA & Service Worker, Install Banner, Online/Offline, New Version Notify -->
     <script>
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/service-worker.js')
+            (location.protocol.startsWith('http') && 'serviceWorker' in navigator) && navigator.serviceWorker.register('/service-worker.js')
                 .then(registration => {
                     console.log('Service Worker registered');
                     registration.addEventListener('updatefound', () => {
@@ -996,5 +1006,176 @@
             });
         });
     </script>
+
+<!-- ===== FULLFIX r4 inject start ===== -->
+
+<script defer>
+// --- wger client (minimal) ---
+(function(global){
+  const WGER_API = (global.WGER_API_BASE || 'https://wger.de/api/v2');
+  const DEFAULT_LANG_ID = (global.WGER_LANG_ID || 2);
+  const PAGE_SIZE = 20;
+  function stripHtml(html){ if(!html) return ''; const d=document.createElement('div'); d.innerHTML=html; return d.textContent||d.innerText||''; }
+  async function fetchJSON(url){ const r=await fetch(url); if(!r.ok) throw new Error(`WGER request failed ${r.status}: ${url}`); return r.json(); }
+  async function listCategories(){ return (await fetchJSON(`${WGER_API}/exercisecategory/?limit=50`)).results; }
+  async function listEquipment(){ return (await fetchJSON(`${WGER_API}/equipment/?limit=50`)).results; }
+  async function pageExerciseInfo({offset=0, limit=PAGE_SIZE}={}){ return fetchJSON(`${WGER_API}/exerciseinfo/?limit=${limit}&offset=${offset}`); }
+  async function searchExercises({q='', categoryId=null, equipmentId=null, page=1}){
+    const offset=(page-1)*PAGE_SIZE; const data=await pageExerciseInfo({offset,limit:PAGE_SIZE}); const items=data.results||[];
+    const filtered=items.filter(item=>{
+      if(categoryId && item.category?.id!==Number(categoryId))return false;
+      if(equipmentId && !item.equipment?.some(e=>e.id===Number(equipmentId)))return false;
+      if(!q) return true; const t=(item.translations||[]).find(t=>t.language===Number(DEFAULT_LANG_ID))||item.translations?.[0];
+      const hay=(t?.name||'').toLowerCase()+' '+(stripHtml(t?.description||'').toLowerCase()); return hay.includes(q.toLowerCase());
+    });
+    return {page, pageSize: PAGE_SIZE, total: data.count, items: filtered};
+  }
+  function pickTranslation(item, langId=DEFAULT_LANG_ID){ const tr=item.translations||[]; let t=tr.find(x=>x.language===Number(langId)); if(!t) t=tr.find(x=>x.language===2)||tr[0]||null; return t; }
+  function mapToLocalExercise(item,{langId=DEFAULT_LANG_ID}={}){
+    const t=pickTranslation(item,langId); const name=t?.name||`Exercise #${item.id}`; const instructionsHTML=t?.description||''; const categoryName=item.category?.name||'';
+    const muscles=(item.muscles||[]).map(m=>m.name_en||m.name); const muscles_secondary=(item.muscles_secondary||[]).map(m=>m.name_en||m.name);
+    const equipment=(item.equipment||[]).map(e=>e.name); const images=(item.images||[]).map(img=>img.image); const license=item.license?.short_name||''; const license_url=item.license?.url||'';
+    return { id:`wger:${item.id}`, name, category:categoryName, muscles, muscles_secondary, equipment, instructionsHTML, images, source:'wger', source_url:`${WGER_API}/exerciseinfo/${item.id}/`, license, license_url, license_author:item.license_author||'' };
+  }
+  global.Wger={listCategories,listEquipment,pageExerciseInfo,searchExercises,mapToLocalExercise,pickTranslation,constants:{WGER_API,DEFAULT_LANG_ID}};
+})(window);
+</script>
+
+
+<script defer>
+// --- wger UI + icon toolbar normalizer + file:// PWA guard ---
+(function(global){
+  // PWA guard for file://
+  if (location.protocol === 'file:') {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register = function(){
+        console.warn('[fullfix] SW disabled on file://'); return Promise.reject(new Error('SW disabled on file://'));
+      };
+    }
+  }
+
+  // Normalize Template/Import/Export buttons to icon-only
+  document.addEventListener('DOMContentLoaded', ()=>{
+    const ICONS = { Template:'➕', Import:'📥', Export:'📤' };
+    const sel = ['button[title]','[role="button"][title]','button[aria-label]','[data-tooltip]'];
+    document.querySelectorAll(sel.join(',')).forEach(btn=>{
+      const label = btn.getAttribute('title') || btn.getAttribute('aria-label') || btn.getAttribute('data-tooltip');
+      if(!label || !ICONS[label]) return;
+      btn.textContent = ICONS[label];
+      btn.setAttribute('aria-label', label);
+      btn.setAttribute('title', label);
+      Object.assign(btn.style, { minWidth:'36px', width: btn.style.width || '36px', height: btn.style.height || '36px',
+        display:'inline-flex', alignItems:'center', justifyContent:'center', fontSize:'18px', lineHeight:'1' });
+    });
+  });
+
+  // WGER Picker
+  function openWgerPicker(){
+    const wrapper = document.createElement('div');
+    wrapper.style.width = 'min(900px, 96vw)'; wrapper.style.maxHeight = '80vh'; wrapper.style.overflow = 'auto';
+    renderSearchPanel(wrapper);
+    if(global.app && typeof global.app.openModal === 'function'){ global.app.openModal(wrapper); } else { document.body.appendChild(wrapper); }
+  }
+  function renderSearchPanel(container){
+    container.innerHTML = `
+      <style>
+        .wger-search { display:flex; gap:.5rem; margin-bottom:.5rem; }
+        .wger-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:12px; }
+        .wger-card { border:1px solid var(--border-color, #2a2e37); border-radius:12px; padding:12px; background:#111827; color:#e5e7eb; box-shadow:0 1px 2px rgba(0,0,0,.15); display:flex; flex-direction:column; gap:8px; }
+        .wger-card-title { font-weight:600; }
+        .wger-thumb { width:100%; height:150px; object-fit:contain; border-radius:8px; background:#0b1220; }
+        .wger-card-ft { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+        .wger-card-meta { color:#9ca3af; font-size:.85rem; }
+        .wger-license { font-size:.8rem; color:#9ca3af; }
+        .wger-desc { max-height:140px; overflow:auto; font-size:.9rem; }
+        .wger-empty { padding:24px; text-align:center; color:#94a3b8; }
+        .btn { padding:.5rem .75rem; border-radius:10px; border:1px solid #374151; background:#1f2937; color:#e5e7eb; cursor:pointer; }
+        .btn-primary { background:#2563eb; color:white; border-color:#1d4ed8; }
+        .wger-pill { border:1px solid #374151; padding:.25rem .5rem; border-radius:9999px; background:#1f2937; cursor:pointer; font-size:.85rem; color:#e5e7eb; }
+      </style>
+      <div class="wger-search">
+        <input id="wger-q" class="wger-input" placeholder="Tìm bài tập (en)..." style="flex:1; padding:.5rem .75rem; border:1px solid #374151; border-radius:10px; background:#0f172a; color:#e5e7eb;" />
+        <button id="wger-btn-search" class="btn">Search</button>
+      </div>
+      <div class="wger-filters" style="display:flex; gap:.5rem; flex-wrap:wrap;">
+        <select id="wger-filter-category" class="wger-pill"><option value="">All categories</option></select>
+        <select id="wger-filter-equipment" class="wger-pill"><option value="">All equipment</option></select>
+      </div>
+      <div id="wger-results" class="wger-grid"></div>
+      <div id="wger-more" style="margin-top:8px; display:flex; justify-content:center;">
+        <button class="btn" id="wger-load-more">Load more</button>
+      </div>
+    `;
+
+    Wger.listCategories().then(list=>{
+      const sel = container.querySelector('#wger-filter-category');
+      list.forEach(c=>{ const opt = document.createElement('option'); opt.value=c.id; opt.textContent=c.name; sel.appendChild(opt); });
+    }).catch(console.warn);
+    Wger.listEquipment().then(list=>{
+      const sel = container.querySelector('#wger-filter-equipment');
+      list.forEach(e=>{ const opt = document.createElement('option'); opt.value=e.id; opt.textContent=e.name; sel.appendChild(opt); });
+    }).catch(console.warn);
+
+    const state = { page:1, currentQuery:'', categoryId:null, equipmentId:null, busy:false };
+    const doSearch = async (append=false)=>{
+      if(state.busy) return; state.busy = true;
+      try{
+        if(!append){ container.querySelector('#wger-results').innerHTML=''; state.page = 1; }
+        const res = await Wger.searchExercises({ q: state.currentQuery, categoryId: state.categoryId, equipmentId: state.equipmentId, page: state.page });
+        const grid = container.querySelector('#wger-results');
+        if(res.items.length === 0 && !append){
+          grid.innerHTML = `<div class="wger-empty">Không tìm thấy kết quả trên trang này. Thử từ khóa khác hoặc bấm "Load more".</div>`;
+        } else {
+          res.items.forEach(item => {
+            const ex = Wger.mapToLocalExercise(item, {});
+            const card = document.createElement('div'); card.className='wger-card';
+            card.innerHTML = `
+              <div class="wger-card-hd">
+                <div class="wger-card-title">${ex.name}</div>
+                <div class="wger-card-meta">${ex.category} • ${(ex.equipment||[]).join(', ') || 'Bodyweight'}</div>
+              </div>
+              <div class="wger-card-body">
+                ${ex.images?.[0] ? `<img class="wger-thumb" alt="${ex.name}" src="${ex.images[0]}" />` : ''}
+                <div class="wger-desc">${ex.instructionsHTML || '<em>No description</em>'}</div>
+              </div>
+              <div class="wger-card-ft">
+                <span class="wger-license">License: ${ex.license || '—'}</span>
+                <button class="btn btn-primary">Import</button>
+              </div>`;
+            card.querySelector('.btn-primary').addEventListener('click', ()=>{
+              try{
+                if(global.app && typeof global.app.addExerciseToLibrary === 'function'){
+                  global.app.addExerciseToLibrary(ex);
+                  global.app.toast && global.app.toast(`Đã import "${ex.name}" từ WGER`);
+                } else { alert('Imported (mock). Hãy kết nối với app.addExerciseToLibrary(ex).'); }
+              }catch(e){ alert('Import failed: '+e.message); }
+            });
+            grid.appendChild(card);
+          });
+        }
+        state.page++;
+      } finally { state.busy = false; }
+    };
+    container.querySelector('#wger-btn-search').addEventListener('click', ()=>{ state.currentQuery = container.querySelector('#wger-q').value.trim(); doSearch(false); });
+    container.querySelector('#wger-load-more').addEventListener('click', ()=> doSearch(true));
+    container.querySelector('#wger-filter-category').addEventListener('change', e=>{ state.categoryId = e.target.value || null; doSearch(false); });
+    container.querySelector('#wger-filter-equipment').addEventListener('change', e=>{ state.equipmentId = e.target.value || null; doSearch(false); });
+    doSearch(false);
+  }
+
+  // Insert WGER button beside common "Add exercise" anchors
+  document.addEventListener('DOMContentLoaded', ()=>{
+    const anchor = document.querySelector('[data-add-exercise-anchor]') || document.querySelector('#add-exercise') || document.querySelector('.add-exercise');
+    if(anchor && !anchor.querySelector('.btn-wger')){
+      const btn = document.createElement('button');
+      btn.className='btn btn-wger'; btn.style.marginLeft='.5rem'; btn.title='Import bài tập từ WGER'; btn.innerHTML='🧰 WGER';
+      btn.addEventListener('click', openWgerPicker);
+      anchor.appendChild(btn);
+    }
+  });
+})(window);
+</script>
+
+<!-- ===== FULLFIX r4 inject end ===== -->
 </body>
 </html>
