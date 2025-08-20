@@ -1847,66 +1847,143 @@ class GymTracker {
     }
 
     replaceExercise(exIndex) {
-        this.showExercisePicker((newExercise) => {
-            this.currentWorkout.exercises[exIndex].name = newExercise.name;
-            this.currentWorkout.exercises[exIndex].muscle = newExercise.muscle;
-            this.renderWorkoutExercises();
-            this.saveData('currentWorkout', this.currentWorkout);
-            this.showToast("Đã thay thế bài tập.");
-        });
-    }
+  this.showExercisePicker((newExercise) => {
+    const old = this.currentWorkout.exercises[exIndex] || {};
+    const preserved = {
+      sets: Array.isArray(old.sets) ? old.sets : [],
+      note: old.note || '',
+      restAfterLastSet: old.restAfterLastSet || '1:00',
+      supersetId: old.supersetId || null,
+      supersetOrder: old.supersetOrder || null
+    };
+    const lib = newExercise || {};
+    this.currentWorkout.exercises[exIndex] = {
+      ...old,
+      id: lib.id,
+      name: lib.name,
+      muscle: lib.muscle,
+      equipment: lib.equipment,
+      type: lib.type,
+      unit: lib.unit || old.unit || 'kg',
+      ...preserved
+    };
+    this.renderWorkoutExercises();
+    this.saveData('currentWorkout', this.currentWorkout);
+    this.showToast("Đã thay thế bài tập.", "success");
+  }, { source: 'library', title: '🔄 Chọn bài tập thay thế' });
+}
 
-    showExercisePicker(callback) {
-        const modal = document.getElementById('exercise-picker-modal');
-        const list = document.getElementById('exercise-picker-list');
-        let selectedId = null;
 
-        list.innerHTML = this.exercises.map(ex => `
-            <div class="exercise-select-item" 
-                 onclick="app.selectReplaceExercise('${ex.id}', this)" 
-                 style="cursor:pointer;display:flex;align-items:center;padding:12px;border-bottom:1px solid #eee;">
-                <div class="exercise-icon" style="font-size:1.6em;margin-right:12px;">${this.getMuscleIcon(ex.muscle)}</div>
-                <div>
-                    <div style="color: var(--text-primary); font-weight: 500;">${ex.name}</div>
-                    <div class="text-muted">${this.getMuscleName(ex.muscle)}</div>
-                </div>
+
+    showExercisePicker(callback, options = {}) {
+  const source = (options.source === 'workout' && this.currentWorkout?.exercises)
+    ? this.currentWorkout.exercises
+    : this.exercises;
+
+  const modal = document.getElementById('exercise-picker-modal');
+  const list = document.getElementById('exercise-picker-list');
+  const header = modal.querySelector('.modal-header h3');
+  const searchInput = modal.querySelector('input[type="search"], #exercise-picker-search');
+  let selectedId = null;
+
+  if (header) {
+    header.textContent = options.title || (options.source === 'workout'
+      ? '⎯⎯ Chọn bài trong buổi tập'
+      : '🔄 Chọn bài tập thay thế');
+  }
+
+  const renderRows = (items) => {
+    list.innerHTML = items
+      .filter(ex => !options.excludeId || String(ex.id) != String(options.excludeId))
+      .map(ex => {
+        const libEx = this.exercises.find(e => String(e.id) === String(ex.id)) || ex;
+        const muscle = libEx.muscle || '';
+        const name = libEx.name || '';
+        return `
+          <div class="exercise-select-item" data-id="${libEx.id}"
+               onclick="app.selectReplaceExercise('${libEx.id}', this)"
+               style="cursor:pointer;display:flex;align-items:center;padding:12px;border-bottom:1px solid #eee;">
+            <div class="exercise-icon" style="font-size:1.6em;margin-right:12px;">${app.getMuscleIcon(muscle)}</div>
+            <div>
+              <div style="color: var(--text-primary); font-weight: 500;">${name}</div>
+              <div class="text-muted">${app.getMuscleName(muscle)}</div>
             </div>
-        `).join('');
+          </div>`;
+      }).join('');
+  };
 
-        window.app.selectReplaceExercise = function(id, el) {
-            document.querySelectorAll('#exercise-picker-list .exercise-select-item').forEach(item => item.classList.remove('selected'));
-            el.classList.add('selected');
-            selectedId = id;
-        };
+  let filtered = source.slice();
+  renderRows(filtered);
 
-        document.getElementById('confirm-ex-picker-btn').onclick = () => {
-            if (!selectedId) {
-                app.showToast("Vui lòng chọn 1 bài tập để thay thế!", "warning");
-                return;
-            }
-            const selectedEx = app.exercises.find(e => e.id === selectedId);
-            if (selectedEx) callback(selectedEx);
-            modal.classList.remove('active');
-        };
+  if (searchInput) {
+    searchInput.value = '';
+    searchInput.oninput = () => {
+      const term = (searchInput.value || '').toLowerCase().trim();
+      filtered = source.filter(ex => {
+        const libEx = this.exercises.find(e => String(e.id) === String(ex.id)) || ex;
+        const n = (libEx.name || '').toLowerCase();
+        const m = (libEx.muscle || '').toLowerCase();
+        return !term || n.includes(term) || m.includes(term);
+      });
+      renderRows(filtered);
+    };
+  }
 
-        modal.classList.add('active');
-    }
+  window.app.selectReplaceExercise = (id, el) => {
+    modal.querySelectorAll('#exercise-picker-list .exercise-select-item').forEach(item => item.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedId = id;
+  };
+
+  const confirmBtn = document.getElementById('confirm-ex-picker-btn');
+  if (confirmBtn) {
+    confirmBtn.onclick = () => {
+      if (!selectedId) {
+        app.showToast(options.source === 'workout'
+          ? 'Vui lòng chọn 1 bài để ghép superset!'
+          : 'Vui lòng chọn 1 bài tập để thay thế!', 'warning');
+        return;
+      }
+      const pool = (options.source === 'workout') ? this.currentWorkout.exercises : this.exercises;
+      const chosen = pool.find(e => String(e.id) === String(selectedId));
+      if (chosen) callback(chosen);
+      modal.classList.remove('active');
+    };
+  }
+
+  modal.classList.add('active');
+}
+
 
     closeExercisePicker() {
         document.getElementById('exercise-picker-modal').classList.remove('active');
     }
 
     createSuperset(exIndex) {
-        this.showExercisePicker((otherExercise) => {
-            const supersetId = Date.now() + '-' + Math.random().toString(36).substr(2,5);
-            this.currentWorkout.exercises[exIndex].supersetId = supersetId;
-            const otherIdx = this.currentWorkout.exercises.findIndex(ex => ex.id === otherExercise.id);
-            if (otherIdx > -1) this.currentWorkout.exercises[otherIdx].supersetId = supersetId;
-            this.renderWorkoutExercises();
-            this.saveData('currentWorkout', this.currentWorkout);
-            this.showToast("Đã tạo superset.");
-        });
+  if (!this.currentWorkout || !Array.isArray(this.currentWorkout.exercises)) return;
+  if (this.currentWorkout.exercises.length < 2) {
+    this.showToast("Cần ít nhất 2 bài tập trong buổi để tạo superset.", "warning");
+    return;
+  }
+  const base = this.currentWorkout.exercises[exIndex];
+  this.showExercisePicker((otherExercise) => {
+    const otherIdx = this.currentWorkout.exercises.findIndex(ex => String(ex.id) === String(otherExercise.id) && ex !== base);
+    if (otherIdx === -1) {
+      this.showToast("Bài được chọn không nằm trong buổi tập hiện tại.", "warning");
+      return;
     }
+    const supersetId = Date.now() + '-' + Math.random().toString(36).substr(2,5);
+    this.currentWorkout.exercises[exIndex].supersetId = supersetId;
+    this.currentWorkout.exercises[otherIdx].supersetId = supersetId;
+    this.currentWorkout.exercises[exIndex].supersetOrder = 0;
+    this.currentWorkout.exercises[otherIdx].supersetOrder = 1;
+    this.renderWorkoutExercises();
+    this.saveData('currentWorkout', this.currentWorkout);
+    this.showToast("Đã tạo superset.", "success");
+  }, { source: 'workout', excludeId: base.id, title: '⎯⎯ Chọn bài để ghép Superset' });
+}
+
+
 
     exercisePreferences(exIndex, event) {
         const ex = this.currentWorkout.exercises[exIndex];
